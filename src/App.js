@@ -1,25 +1,45 @@
-import logo from './logo.svg';
-import './App.css';
+// src/App.js
+import { useState } from 'react'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
+import AuthLayout from './components/auth/AuthLayout'
+import LoginForm from './components/auth/LoginForm'
+import RegisterForm from './components/auth/RegisterForm'
+import Dashboard from './components/dashboard/Dashboard'
+import LoadingSpinner from './components/common/LoadingSpinner'
 
-function App() {
+// Auth wrapper component
+const AuthWrapper = () => {
+  const [isLogin, setIsLogin] = useState(true)
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return <LoadingSpinner />
+  }
+
+  if (user) {
+    return <Dashboard />
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <AuthLayout>
+      {isLogin ? (
+        <LoginForm onToggleForm={() => setIsLogin(false)} />
+      ) : (
+        <RegisterForm onToggleForm={() => setIsLogin(true)} />
+      )}
+    </AuthLayout>
+  )
 }
 
-export default App;
+// Main App component
+function App() {
+  return (
+    <AuthProvider>
+      <div className="App">
+        <AuthWrapper />
+      </div>
+    </AuthProvider>
+  )
+}
+
+export default App
