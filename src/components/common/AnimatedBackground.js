@@ -8,7 +8,6 @@ const AnimatedBackground = ({ children }) => {
   const dotsRef = useRef([])
 
   useEffect(() => {
-    const container = containerRef.current
     const cursor = cursorRef.current
     const ring = ringRef.current
     
@@ -88,14 +87,12 @@ const AnimatedBackground = ({ children }) => {
   }, [])
 
   useEffect(() => {
-    let dotCount = 0
-    
+
     // Create floating dots
     const createDot = () => {
       if (!containerRef.current) return
 
       const dot = document.createElement('div')
-      dotCount++
       
       // Random properties
       const size = Math.random() * 3 + 1.5
