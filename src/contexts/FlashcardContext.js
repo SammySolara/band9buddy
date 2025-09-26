@@ -19,6 +19,22 @@ export const FlashcardProvider = ({ children }) => {
   const [currentSet, setCurrentSet] = useState(null)
   const { user } = useAuth()
 
+  // Transform flashcards data to match component expectations
+  const transformSet = (set) => {
+    if (!set) return set
+    return {
+      ...set,
+      cards: set.flashcards?.map(card => ({
+        id: card.id,
+        front: card.front_text,
+        back: card.back_text,
+        // Keep original fields for database operations
+        front_text: card.front_text,
+        back_text: card.back_text
+      })) || []
+    }
+  }
+
   // Load user's flashcard sets
   const loadSets = async () => {
     if (!user) return
@@ -35,7 +51,10 @@ export const FlashcardProvider = ({ children }) => {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setSets(data || [])
+      
+      // Transform data to include both formats
+      const transformedSets = (data || []).map(transformSet)
+      setSets(transformedSets)
     } catch (error) {
       console.error('Error loading sets:', error)
     } finally {
@@ -48,44 +67,122 @@ export const FlashcardProvider = ({ children }) => {
     if (!user) return { success: false, error: 'User not authenticated' }
 
     try {
-      const { data, error } = await supabase
+      // Extract cards from setData if present
+      const { cards, ...setInfo } = setData
+      
+      const { data: newSet, error: setError } = await supabase
         .from('flashcard_sets')
         .insert([{
-          ...setData,
+          ...setInfo,
           user_id: user.id
         }])
         .select()
         .single()
 
-      if (error) throw error
+      if (setError) throw setError
+
+      // If cards were provided, add them
+      let flashcardsData = []
+      if (cards && cards.length > 0) {
+        const cardsToInsert = cards
+          .filter(card => card.front?.trim() && card.back?.trim())
+          .map(card => ({
+            set_id: newSet.id,
+            front_text: card.front.trim(),
+            back_text: card.back.trim()
+          }))
+
+        if (cardsToInsert.length > 0) {
+          const { data: newCards, error: cardsError } = await supabase
+            .from('flashcards')
+            .insert(cardsToInsert)
+            .select()
+
+          if (cardsError) throw cardsError
+          flashcardsData = newCards
+        }
+      }
+
+      // Create the complete set object
+      const completeSet = transformSet({
+        ...newSet,
+        flashcards: flashcardsData
+      })
       
       // Add to local state
-      setSets(prev => [{ ...data, flashcards: [] }, ...prev])
-      return { success: true, data }
+      setSets(prev => [completeSet, ...prev])
+      return { success: true, data: completeSet }
     } catch (error) {
+      console.error('Create set error:', error)
       return { success: false, error: error.message }
     }
   }
 
-  // Update flashcard set
+  // Update flashcard set (metadata only)
   const updateSet = async (setId, updates) => {
     try {
-      const { data, error } = await supabase
+      // Separate cards from other updates
+      const { cards, ...setUpdates } = updates
+
+      // Update set metadata
+      const { data: updatedSet, error: setError } = await supabase
         .from('flashcard_sets')
-        .update(updates)
+        .update(setUpdates)
         .eq('id', setId)
         .eq('user_id', user.id)
         .select()
         .single()
 
-      if (error) throw error
-      
-      // Update local state
-      setSets(prev => prev.map(set => 
-        set.id === setId ? { ...set, ...updates } : set
-      ))
-      return { success: true, data }
+      if (setError) throw setError
+
+      // If cards were provided, handle card updates
+      if (cards) {
+        // Delete existing cards
+        await supabase
+          .from('flashcards')
+          .delete()
+          .eq('set_id', setId)
+
+        // Insert new cards
+        let flashcardsData = []
+        const cardsToInsert = cards
+          .filter(card => card.front?.trim() && card.back?.trim())
+          .map(card => ({
+            set_id: setId,
+            front_text: card.front.trim(),
+            back_text: card.back.trim()
+          }))
+
+        if (cardsToInsert.length > 0) {
+          const { data: newCards, error: cardsError } = await supabase
+            .from('flashcards')
+            .insert(cardsToInsert)
+            .select()
+
+          if (cardsError) throw cardsError
+          flashcardsData = newCards
+        }
+
+        // Update local state with complete set
+        const completeSet = transformSet({
+          ...updatedSet,
+          flashcards: flashcardsData
+        })
+
+        setSets(prev => prev.map(set => 
+          set.id === setId ? completeSet : set
+        ))
+
+        return { success: true, data: completeSet }
+      } else {
+        // Just update metadata, keep existing cards
+        setSets(prev => prev.map(set => 
+          set.id === setId ? { ...set, ...setUpdates } : set
+        ))
+        return { success: true, data: updatedSet }
+      }
     } catch (error) {
+      console.error('Update set error:', error)
       return { success: false, error: error.message }
     }
   }
@@ -113,62 +210,78 @@ export const FlashcardProvider = ({ children }) => {
   }
 
   // Add flashcard to set
-const addCard = async (setId, cardData) => {
-  try {
-    const { data, error } = await supabase
-      .from('flashcards')
-      .insert([{
-        set_id: setId,
-        front_text: cardData.front_text,
-        back_text: cardData.back_text
-      }])
-      .select()
-      .single()
+  const addCard = async (setId, cardData) => {
+    try {
+      const { data, error } = await supabase
+        .from('flashcards')
+        .insert([{
+          set_id: setId,
+          front_text: cardData.front_text || cardData.front,
+          back_text: cardData.back_text || cardData.back
+        }])
+        .select()
+        .single()
 
-    if (error) throw error
+      if (error) throw error
 
-    setSets(prev => prev.map(set =>
-      set.id === setId
-        ? { ...set, flashcards: [...(set.flashcards || []), data] }
-        : set
-    ))
+      setSets(prev => prev.map(set =>
+        set.id === setId
+          ? {
+              ...set,
+              flashcards: [...(set.flashcards || []), data],
+              cards: [...(set.cards || []), {
+                id: data.id,
+                front: data.front_text,
+                back: data.back_text,
+                front_text: data.front_text,
+                back_text: data.back_text
+              }]
+            }
+          : set
+      ))
 
-    return { success: true, data }
-  } catch (error) {
-    return { success: false, error: error.message }
+      return { success: true, data }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
   }
-}
-
-
 
   // Update flashcard
   const updateCard = async (cardId, updates) => {
     try {
-        const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('flashcards')
         .update({
-            front_text: updates.front_text,
-            back_text: updates.back_text
+          front_text: updates.front_text || updates.front,
+          back_text: updates.back_text || updates.back
         })
         .eq('id', cardId)
         .select()
         .single()
 
-        if (error) throw error
+      if (error) throw error
 
-        setSets(prev => prev.map(set => ({
+      setSets(prev => prev.map(set => ({
         ...set,
         flashcards: set.flashcards?.map(card =>
-            card.id === cardId ? { ...card, ...data } : card
+          card.id === cardId ? { ...card, ...data } : card
+        ),
+        cards: set.cards?.map(card =>
+          card.id === cardId ? {
+            ...card,
+            front: data.front_text,
+            back: data.back_text,
+            front_text: data.front_text,
+            back_text: data.back_text
+          } : card
         )
-        })))
+      })))
 
-        return { success: true, data }
+      return { success: true, data }
     } catch (error) {
-        return { success: false, error: error.message }
+      return { success: false, error: error.message }
     }
-}
-
+  }
 
   // Delete flashcard
   const deleteCard = async (cardId) => {
@@ -183,7 +296,8 @@ const addCard = async (setId, cardData) => {
       // Remove from local state
       setSets(prev => prev.map(set => ({
         ...set,
-        flashcards: set.flashcards?.filter(card => card.id !== cardId)
+        flashcards: set.flashcards?.filter(card => card.id !== cardId),
+        cards: set.cards?.filter(card => card.id !== cardId)
       })))
       return { success: true }
     } catch (error) {

@@ -1,9 +1,9 @@
-// src/components/flashcards/SetEditorModal.js
+// src/components/flashcards/CreateSetModal.js
 import { useState } from 'react'
 import { X, Plus, Trash2, Edit2, Check, XCircle } from 'lucide-react'
 import { useFlashcards } from '../../contexts/FlashcardContext'
 
-const SetEditorModal = ({ set, onClose }) => {
+const CreateSetModal = ({ set, onClose }) => {
   const { addCard, updateCard, deleteCard } = useFlashcards()
   const [newCard, setNewCard] = useState({ front_text: '', back_text: '' })
   const [editingId, setEditingId] = useState(null)
@@ -27,7 +27,10 @@ const SetEditorModal = ({ set, onClose }) => {
 
   const startEditing = (card) => {
     setEditingId(card.id)
-    setEditingValues({ front_text: card.front_text, back_text: card.back_text })
+    setEditingValues({ 
+      front_text: card.front_text || card.front, 
+      back_text: card.back_text || card.back 
+    })
   }
 
   const handleUpdate = async (cardId) => {
@@ -46,6 +49,9 @@ const SetEditorModal = ({ set, onClose }) => {
       await deleteCard(cardId)
     }
   }
+
+  // Use cards array (transformed format) for display
+  const cards = set.cards || set.flashcards || []
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -101,8 +107,8 @@ const SetEditorModal = ({ set, onClose }) => {
 
           {/* Existing Cards */}
           <div className="space-y-4 max-h-80 overflow-y-auto">
-            {set.flashcards?.length > 0 ? (
-              set.flashcards.map((card) => (
+            {cards.length > 0 ? (
+              cards.map((card) => (
                 <div
                   key={card.id}
                   className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border"
@@ -124,8 +130,8 @@ const SetEditorModal = ({ set, onClose }) => {
                     </div>
                   ) : (
                     <div className="flex-1 grid grid-cols-2 gap-2 mr-3">
-                      <span className="truncate">{card.front_text}</span>
-                      <span className="truncate text-gray-600">{card.back_text}</span>
+                      <span className="truncate">{card.front || card.front_text}</span>
+                      <span className="truncate text-gray-600">{card.back || card.back_text}</span>
                     </div>
                   )}
 
@@ -183,4 +189,4 @@ const SetEditorModal = ({ set, onClose }) => {
   )
 }
 
-export default SetEditorModal
+export default CreateSetModal
