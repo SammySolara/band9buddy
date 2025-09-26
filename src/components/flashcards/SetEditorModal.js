@@ -24,10 +24,6 @@ const SetEditorModal = () => {
     }
   }, [existingSet])
 
-  const _handleClose = () => {
-    navigate('/dashboard/flashcards')
-  }
-
   const addCard = () => {
     setCards([...cards, { front: '', back: '' }])
   }
