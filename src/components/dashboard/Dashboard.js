@@ -1,16 +1,22 @@
 // src/components/dashboard/Dashboard.js - Updated as Layout
 import { LogOut, BookOpen, GamepadIcon, GraduationCap, Copy, User, Settings, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useFlashcards } from '../../contexts/FlashcardContext' // Import the flashcards context
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const Dashboard = ({ children }) => {
   const { user, signOut } = useAuth()
+  const { sets } = useFlashcards() // Get sets from flashcard context
   const navigate = useNavigate()
   const location = useLocation()
 
   const handleSignOut = async () => {
     await signOut()
   }
+
+  // Calculate dynamic stats
+  const flashcardSetsCount = sets?.length || 0
+  const totalWordsLearned = sets?.reduce((total, set) => total + (set.cards?.length || 0), 0) || 0
 
   const features = [
     {
@@ -94,7 +100,7 @@ const Dashboard = ({ children }) => {
         </p>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - UPDATED: Dynamic counts */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
@@ -102,8 +108,8 @@ const Dashboard = ({ children }) => {
               <Copy className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Flashcards</p>
-              <p className="text-2xl font-semibold text-gray-900">0</p>
+              <p className="text-sm font-medium text-gray-600">Bộ Flashcards</p>
+              <p className="text-2xl font-semibold text-gray-900">{flashcardSetsCount}</p>
             </div>
           </div>
         </div>
