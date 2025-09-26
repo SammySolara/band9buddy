@@ -16,7 +16,6 @@ const Dashboard = ({ children }) => {
 
   // Calculate dynamic stats
   const flashcardSetsCount = sets?.length || 0
-  const totalWordsLearned = sets?.reduce((total, set) => total + (set.cards?.length || 0), 0) || 0
 
   const features = [
     {

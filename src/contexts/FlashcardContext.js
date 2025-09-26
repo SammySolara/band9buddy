@@ -1,5 +1,5 @@
 // src/contexts/FlashcardContext.js
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { supabase } from '../services/supabase'
 import { useAuth } from './AuthContext'
 
@@ -36,7 +36,7 @@ export const FlashcardProvider = ({ children }) => {
   }
 
   // Load user's flashcard sets
-  const loadSets = async () => {
+  const loadSets = useCallback(async () => {
     if (!user) return
 
     try {
@@ -60,7 +60,7 @@ export const FlashcardProvider = ({ children }) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user]) // depend on user
 
   // Create new flashcard set
   const createSet = async (setData) => {
@@ -313,7 +313,7 @@ export const FlashcardProvider = ({ children }) => {
       setSets([])
       setCurrentSet(null)
     }
-  }, [user])
+  }, [user, loadSets])
 
   const value = {
     sets,

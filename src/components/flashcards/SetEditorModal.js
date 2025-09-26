@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { X, Plus, Trash2, Save } from 'lucide-react'
+import { Plus, Trash2, Save } from 'lucide-react'
 import { useFlashcards } from '../../contexts/FlashcardContext'
 
 const SetEditorModal = () => {
@@ -24,7 +24,7 @@ const SetEditorModal = () => {
     }
   }, [existingSet])
 
-  const handleClose = () => {
+  const _handleClose = () => {
     navigate('/dashboard/flashcards')
   }
 
