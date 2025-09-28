@@ -90,16 +90,40 @@ const StudyMode = () => {
   }
 
   const handleRestart = () => {
+    console.log('Restarting study session...')
     setIsComplete(false)
     setCurrentCardIndex(0)
     setIsFlipped(false)
     setStudyResults([])
     setSessionKey(Date.now()) // Force complete re-render
+    
+    // Force a small delay to ensure state is properly reset
+    setTimeout(() => {
+      console.log('Restart completed. Current card:', set.cards[0])
+    }, 100)
   }
 
   const handleFinish = () => {
     navigate('/dashboard/flashcards')
   }
+
+  // Get the current image URL based on card side
+  const getCurrentImageUrl = () => {
+    if (!currentCard) return null
+    
+    if (isFlipped) {
+      return currentCard.back_image_url || null
+    } else {
+      return currentCard.front_image_url || null
+    }
+  }
+
+  const currentImageUrl = getCurrentImageUrl()
+
+  // Debug logging to check image URLs
+  console.log('Current card:', currentCard)
+  console.log('Is flipped:', isFlipped)
+  console.log('Current image URL:', currentImageUrl)
 
   if (isComplete) {
     const correctCount = studyResults.filter(r => r.difficulty === 'easy').length
@@ -170,42 +194,104 @@ const StudyMode = () => {
         </div>
       </div>
 
-      {/* Flashcard */}
+      {/* Flashcard with Background Image */}
       <div className="mb-8">
         <div 
-          className="relative bg-white rounded-xl shadow-lg p-8 min-h-80 cursor-pointer transition-transform duration-300 hover:scale-105"
+          className="relative bg-white rounded-xl shadow-lg overflow-hidden min-h-80 cursor-pointer transition-transform duration-300 hover:scale-105"
           onClick={handleFlip}
         >
-          <div className="absolute top-4 right-4">
-            <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
-              {isFlipped ? 'Mặt sau' : 'Mặt trước'}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-center h-full min-h-64">
-            <div className="text-center">
-              <div className="text-2xl font-semibold text-gray-900 mb-4">
-                {isFlipped ? (currentCard.back || currentCard.back_text) : (currentCard.front || currentCard.front_text)}
-              </div>
-              
-              {!isFlipped && (
-                <p className="text-gray-500 text-sm">
-                  Nhấn để xem đáp án
-                </p>
-              )}
+          {/* Background Image with Overlay */}
+          {currentImageUrl && (
+            <div className="absolute inset-0 z-0">
+              <img
+                src={currentImageUrl}
+                alt={isFlipped ? "Back image" : "Front image"}
+                className="w-full h-full object-cover"
+                onLoad={() => console.log('Image loaded successfully:', currentImageUrl)}
+                onError={(e) => {
+                  console.error('Background image failed to load:', e.target.src);
+                  console.log('Hiding failed image element');
+                  e.target.parentElement.style.display = 'none';
+                }}
+              />
+              {/* Multiple overlay options for better text visibility */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/60"></div>
+              <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px]"></div>
             </div>
-          </div>
+          )}
 
-          <div className="absolute bottom-4 left-4">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                handleFlip()
-              }}
-              className="text-blue-500 hover:text-blue-700 p-2"
-            >
-              <RotateCcw className="h-5 w-5" />
-            </button>
+          {/* Card Content */}
+          <div className="relative z-10 p-8 min-h-80">
+            <div className="absolute top-4 right-4">
+              <span className={`text-xs font-medium px-3 py-1.5 rounded-full ${
+                currentImageUrl 
+                  ? 'bg-black/50 text-white backdrop-blur-sm border border-white/20' 
+                  : 'text-gray-500 bg-gray-100'
+              }`}>
+                {isFlipped ? 'Mặt sau' : 'Mặt trước'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-center h-full min-h-64">
+              <div className="text-center max-w-md mx-auto">
+                {/* Text with enhanced visibility */}
+                <div className={`text-2xl font-bold mb-4 ${
+                  currentImageUrl 
+                    ? 'text-white drop-shadow-lg' 
+                    : 'text-gray-900'
+                }`} style={{
+                  textShadow: currentImageUrl ? '2px 2px 4px rgba(0,0,0,0.8), 0px 0px 8px rgba(0,0,0,0.3)' : 'none'
+                }}>
+                  {isFlipped ? (currentCard.back || currentCard.back_text) : (currentCard.front || currentCard.front_text)}
+                </div>
+                
+                {!isFlipped && (
+                  <p className={`text-sm ${
+                    currentImageUrl 
+                      ? 'text-white/80 drop-shadow-md' 
+                      : 'text-gray-500'
+                  }`} style={{
+                    textShadow: currentImageUrl ? '1px 1px 2px rgba(0,0,0,0.8)' : 'none'
+                  }}>
+                    Nhấn để xem đáp án
+                  </p>
+                )}
+
+                {/* Tags display with better visibility */}
+                {currentCard.tags && currentCard.tags.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-2 mt-4">
+                    {currentCard.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className={`text-xs px-2 py-1 rounded-full ${
+                          currentImageUrl
+                            ? 'bg-black/40 text-white border border-white/30 backdrop-blur-sm'
+                            : 'bg-blue-100 text-blue-700'
+                        }`}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="absolute bottom-4 left-4">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleFlip()
+                }}
+                className={`p-2 rounded-full transition-all ${
+                  currentImageUrl 
+                    ? 'text-white hover:text-blue-300 bg-black/30 hover:bg-black/50 backdrop-blur-sm border border-white/20' 
+                    : 'text-blue-500 hover:text-blue-700 hover:bg-blue-50'
+                }`}
+              >
+                <RotateCcw className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -225,14 +311,14 @@ const StudyMode = () => {
           <div className="flex space-x-4">
             <button
               onClick={() => handleNext('hard')}
-              className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg transition-colors"
+              className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg transition-colors shadow-lg"
             >
               <XCircle className="h-5 w-5" />
               <span>Khó</span>
             </button>
             <button
               onClick={() => handleNext('easy')}
-              className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg transition-colors"
+              className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg transition-colors shadow-lg"
             >
               <CheckCircle className="h-5 w-5" />
               <span>Dễ</span>
