@@ -51,7 +51,7 @@ const Dashboard = ({ children }) => {
       title: 'IELTS Practice',
       description: 'Luyện thi IELTS hiệu quả',
       color: 'bg-red-500',
-      comingSoon: true,
+      comingSoon: false, // CHANGED: Set to false to enable routing
       path: '/dashboard/ielts'
     }
   ]
@@ -73,6 +73,7 @@ const Dashboard = ({ children }) => {
     if (path === '/dashboard/notebooks') return 'Notebooks'
     if (path === '/dashboard/games') return 'Games & Quizzes'
     if (path === '/dashboard/ielts') return 'IELTS Practice'
+    if (path.startsWith('/dashboard/ielts/')) return 'IELTS Practice' // ADDED: Handle IELTS sub-routes
     return 'Dashboard'
   }
 
@@ -81,6 +82,9 @@ const Dashboard = ({ children }) => {
     if (path.startsWith('/dashboard/flashcards/study/') || 
         path.startsWith('/dashboard/flashcards/edit/')) {
       return '/dashboard/flashcards'
+    }
+    if (path.startsWith('/dashboard/ielts/')) { // ADDED: Handle IELTS sub-routes
+      return '/dashboard/ielts'
     }
     return '/dashboard'
   }

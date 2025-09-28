@@ -1,17 +1,22 @@
-// src/components/dashboard/DashboardRoutes.js
+// src/components/dashboard/DashboardRoutes.js - Updated with IELTS routes
 import { Routes, Route } from 'react-router-dom'
 import { FlashcardProvider } from '../../contexts/FlashcardContext'
 import Dashboard from './Dashboard'
 import FlashcardSets from '../flashcards/FlashcardSets'
 import SetEditorModal from '../flashcards/SetEditorModal'
 import StudyMode from '../flashcards/StudyMode'
+import IELTSPractice from '../ielts/IELTSPractice'
 
 // Simple Coming Soon component
 const ComingSoon = ({ feature }) => {
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* We'll reuse the same header from Dashboard */}
-      <Dashboard />
+      <Dashboard>
+        <div className="text-center py-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{feature}</h2>
+          <p className="text-gray-600">Tính năng sắp ra mắt!</p>
+        </div>
+      </Dashboard>
     </div>
   )
 }
@@ -48,10 +53,23 @@ const DashboardRoutes = () => {
           </div>
         } />
         
+        {/* IELTS Practice routes */}
+        <Route path="/ielts" element={
+          <div className="min-h-screen bg-gray-50">
+            <Dashboard>
+              <IELTSPractice />
+            </Dashboard>
+          </div>
+        } />
+        
+        {/* IELTS Practice sections - placeholder routes */}
+        <Route path="/ielts/reading" element={<ComingSoon feature="Reading Test" />} />
+        <Route path="/ielts/listening" element={<ComingSoon feature="Listening Test" />} />
+        <Route path="/ielts/writing" element={<ComingSoon feature="Writing Test" />} />
+        
         {/* Coming soon routes */}
         <Route path="/notebooks" element={<ComingSoon feature="Notebooks" />} />
         <Route path="/games" element={<ComingSoon feature="Games & Quizzes" />} />
-        <Route path="/ielts" element={<ComingSoon feature="IELTS Practice" />} />
       </Routes>
     </FlashcardProvider>
   )
