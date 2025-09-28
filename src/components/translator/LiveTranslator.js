@@ -35,7 +35,6 @@ const LiveTranslator = () => {
         "https://smjypkielfgtyaddrpbb.supabase.co/functions/v1/translate",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${process.env.REACT_APP_SUPABASE_ANON_KEY}`,

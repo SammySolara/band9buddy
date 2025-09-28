@@ -12,14 +12,51 @@ const DictionarySearch = () => {
   const [error, setError] = useState(null)
   const [searchHistory, setSearchHistory] = useState([])
 
-  // Handle URL parameter for word of the day
   useEffect(() => {
-    const wordParam = searchParams.get('word')
-    if (wordParam) {
-      setSearchTerm(wordParam)
-      searchWord(wordParam)
-    }
-  }, [searchParams])
+    const wordParam = searchParams.get("word");
+    if (!wordParam) return;
+
+    setSearchTerm(wordParam);
+
+    const fetchWord = async () => {
+      if (!wordParam.trim()) return;
+
+      setLoading(true);
+      setError(null);
+      setVietnameseTranslation(null);
+
+      try {
+        const response = await fetch(
+          `https://api.dictionaryapi.dev/api/v2/entries/en/${wordParam.toLowerCase()}`
+        );
+        if (!response.ok) throw new Error("Word not found");
+
+        const data = await response.json();
+        setWordData(data[0]);
+
+        searchVietnameseTranslation(wordParam);
+
+        setSearchHistory((prev) => {
+          const newHistory = [
+            wordParam,
+            ...prev.filter(
+              (item) => item.toLowerCase() !== wordParam.toLowerCase()
+            ),
+          ];
+          return newHistory.slice(0, 5);
+        });
+      } catch (err) {
+        setError(err.message);
+        setWordData(null);
+        setVietnameseTranslation(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWord();
+  }, [searchParams]);
+  
 
 const searchVietnameseTranslation = async (word) => {
   try {
