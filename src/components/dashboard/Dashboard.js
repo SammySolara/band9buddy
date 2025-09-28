@@ -1,5 +1,5 @@
 // src/components/dashboard/Dashboard.js - Updated as Layout
-import { LogOut, BookOpen, GamepadIcon, GraduationCap, Copy, User, Settings, ArrowLeft, Star } from 'lucide-react'
+import { LogOut, BookOpen, GamepadIcon, GraduationCap, Copy, User, Settings, ArrowLeft, Star, Languages } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useFlashcards } from '../../contexts/FlashcardContext' // Import the flashcards context
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -66,6 +66,15 @@ const Dashboard = ({ children }) => {
       path: '/dashboard/dictionary'
     },
     {
+      id: 'translator',
+      icon: Languages,
+      title: 'Live Translator',
+      description: 'Dịch thuật trực tiếp',
+      color: 'bg-orange-500',
+      comingSoon: false,
+      path: '/dashboard/translator'
+    },
+    {
       id: 'games',
       icon: GamepadIcon,
       title: 'Games & Quizzes',
@@ -101,6 +110,7 @@ const Dashboard = ({ children }) => {
     if (path === '/dashboard/flashcards') return 'Flashcards'
     if (path === '/dashboard/dictionary') return 'Dictionary'
     if (path === '/dashboard/games') return 'Games & Quizzes'
+    if (path === '/dashboard/translator') return 'Live Translator'
     if (path === '/dashboard/ielts') return 'IELTS Practice'
     if (path.startsWith('/dashboard/ielts/')) return 'IELTS Practice' // ADDED: Handle IELTS sub-routes
     return 'Dashboard'
@@ -182,11 +192,11 @@ const Dashboard = ({ children }) => {
 
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <GamepadIcon className="h-6 w-6 text-purple-600" />
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <Languages className="h-6 w-6 text-orange-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Điểm quiz</p>
+              <p className="text-sm font-medium text-gray-600">Translations</p>
               <p className="text-2xl font-semibold text-gray-900">0</p>
             </div>
           </div>

@@ -10,6 +10,7 @@ import ReadingTests from '../ielts/ReadingTests'
 import ListeningTests from '../ielts/ListeningTests'
 import WritingTests from '../ielts/WritingTests'
 import DictionarySearch from '../dictionary/DictionarySearch'
+import LiveTranslator from '../translator/LiveTranslator'
 
 // Simple Coming Soon component
 const ComingSoon = ({ feature }) => {
@@ -62,6 +63,15 @@ const DashboardRoutes = () => {
           <div className="min-h-screen bg-gray-50">
             <Dashboard>
               <DictionarySearch />
+            </Dashboard>
+          </div>
+        } />
+        
+        {/* Translator route */}
+        <Route path="/translator" element={
+          <div className="min-h-screen bg-gray-50">
+            <Dashboard>
+              <LiveTranslator />
             </Dashboard>
           </div>
         } />
