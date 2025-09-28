@@ -1,309 +1,132 @@
-// src/components/translator/LiveTranslator.js
-import { useState, useEffect, useCallback } from 'react'
-import { ArrowRightLeft, Copy, Volume2, Languages, Loader2 } from 'lucide-react'
+import { useState } from "react";
+import {Languages, ArrowLeftRight } from "lucide-react";
 
 const LiveTranslator = () => {
-  const [sourceText, setSourceText] = useState('')
-  const [translatedText, setTranslatedText] = useState('')
-  const [sourceLang, setSourceLang] = useState('en')
-  const [targetLang, setTargetLang] = useState('vi')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [fromLang, setFromLang] = useState("EN");
+  const [toLang, setToLang] = useState("VI");
+  const [text, setText] = useState("");
+  const [translatedText, setTranslatedText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Common languages for quick access
   const languages = [
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
-    { code: 'zh', name: '中文', flag: '🇨🇳' },
-    { code: 'ja', name: '日本語', flag: '🇯🇵' },
-    { code: 'ko', name: '한국어', flag: '🇰🇷' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-    { code: 'es', name: 'Español', flag: '🇪🇸' },
-    { code: 'it', name: 'Italiano', flag: '🇮🇹' },
-    { code: 'pt', name: 'Português', flag: '🇵🇹' },
-    { code: 'ru', name: 'Русский', flag: '🇷🇺' },
-    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
-    { code: 'hi', name: 'हिन्दी', flag: '🇮🇳' },
-    { code: 'th', name: 'ไทย', flag: '🇹🇭' }
-  ]
-
-  // Mock translation function - replace with actual Google Translate API
-  const translateText = async (text, from, to) => {
-    if (!text.trim()) {
-      setTranslatedText('')
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      // Mock translation with delay to simulate API call
-      // Replace this with actual Google Translate API call
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Mock translations for demo
-      const mockTranslations = {
-        'hello': { vi: 'xin chào', zh: '你好', ja: 'こんにちは', ko: '안녕하세요' },
-        'goodbye': { vi: 'tạm biệt', zh: '再见', ja: 'さようなら', ko: '안녕히 가세요' },
-        'thank you': { vi: 'cảm ơn', zh: '谢谢', ja: 'ありがとう', ko: '감사합니다' },
-        'how are you': { vi: 'bạn khỏe không', zh: '你好吗', ja: '元気ですか', ko: '어떻게 지내세요' },
-        'good morning': { vi: 'chào buổi sáng', zh: '早上好', ja: 'おはよう', ko: '좋은 아침' }
-      }
-
-      const lowerText = text.toLowerCase()
-      if (mockTranslations[lowerText] && mockTranslations[lowerText][to]) {
-        setTranslatedText(mockTranslations[lowerText][to])
-      } else {
-        // Fallback mock translation
-        setTranslatedText(`[${to.toUpperCase()}] ${text}`)
-      }
-
-      /* 
-      // Actual Google Translate API implementation would look like this:
-      
-      const response = await fetch('/api/translate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text,
-          source: from,
-          target: to
-        })
-      })
-      
-      if (!response.ok) {
-        throw new Error('Translation failed')
-      }
-      
-      const data = await response.json()
-      setTranslatedText(data.translatedText)
-      */
-
-    } catch (err) {
-      setError('Translation failed. Please try again.')
-      console.error('Translation error:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Debounced translation
-  const debouncedTranslate = useCallback(
-    debounce((text, from, to) => translateText(text, from, to), 500),
-    []
-  )
-
-  useEffect(() => {
-    if (sourceText) {
-      debouncedTranslate(sourceText, sourceLang, targetLang)
-    }
-  }, [sourceText, sourceLang, targetLang, debouncedTranslate])
+    { code: "EN", name: "English", flag: "🇺🇸" },
+    { code: "VI", name: "Tiếng Việt", flag: "🇻🇳" },
+  ];
 
   const swapLanguages = () => {
-    const tempLang = sourceLang
-    const tempText = sourceText
-    
-    setSourceLang(targetLang)
-    setTargetLang(tempLang)
-    setSourceText(translatedText)
-    setTranslatedText(tempText)
-  }
+    setFromLang(toLang);
+    setToLang(fromLang);
+    setText(translatedText);
+    setTranslatedText("");
+  };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text).catch(err => console.log('Copy failed:', err))
-  }
-
-  const speakText = (text, lang) => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text)
-      utterance.lang = lang === 'vi' ? 'vi-VN' : lang === 'en' ? 'en-US' : lang
-      speechSynthesis.speak(utterance)
+  const translateText = async () => {
+    if (!text.trim()) {
+      setTranslatedText("");
+      return;
     }
-  }
 
-  const getLanguageName = (code) => {
-    return languages.find(lang => lang.code === code)?.name || code
-  }
+    setLoading(true);
+    setError(null);
 
-  const getLanguageFlag = (code) => {
-    return languages.find(lang => lang.code === code)?.flag || '🌐'
-  }
+    try {
+      const response = await fetch(
+        "https://smjypkielfgtyaddrpbb.supabase.co/functions/v1/translate",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.REACT_APP_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            text,
+            source: fromLang,
+            target: toLang,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Supabase function failed");
+
+      const data = await response.json();
+      setTranslatedText(data.translatedText);
+    } catch (err) {
+      console.error("Translation error:", err);
+      setError("Translation failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          Live Translator 🌐
-        </h2>
-        <p className="text-gray-600">
-          Dịch thuật trực tiếp giữa các ngôn ngữ. Nhập văn bản và xem kết quả dịch ngay lập tức.
-        </p>
-      </div>
+    <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-lg">
+      <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+        <Languages className="w-6 h-6 text-blue-600" />
+        Live Translator (EN ↔ VI)
+      </h2>
 
-      {/* Language Selection */}
-      <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Source Language */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">From</label>
-            <select
-              value={sourceLang}
-              onChange={(e) => setSourceLang(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {languages.map(lang => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.flag} {lang.name}
-                </option>
-              ))}
-            </select>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Input */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-medium text-gray-700">
+              {languages.find((l) => l.code === fromLang).flag}{" "}
+              {languages.find((l) => l.code === fromLang).name}
+            </span>
           </div>
-
-          {/* Swap Button */}
-          <div className="flex items-end justify-center md:col-span-2 md:order-last">
-            <button
-              onClick={swapLanguages}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-            >
-              <ArrowRightLeft className="h-4 w-4" />
-              <span>Swap</span>
-            </button>
-          </div>
-
-          {/* Target Language */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">To</label>
-            <select
-              value={targetLang}
-              onChange={(e) => setTargetLang(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {languages.map(lang => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.flag} {lang.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Translation Interface */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Source Text */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              {getLanguageFlag(sourceLang)} {getLanguageName(sourceLang)}
-            </h3>
-            <div className="flex items-center gap-2">
-              {sourceText && (
-                <>
-                  <button
-                    onClick={() => speakText(sourceText, sourceLang)}
-                    className="p-2 text-gray-500 hover:text-blue-600 rounded-lg transition-colors"
-                    title="Listen"
-                  >
-                    <Volume2 className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => copyToClipboard(sourceText)}
-                    className="p-2 text-gray-500 hover:text-blue-600 rounded-lg transition-colors"
-                    title="Copy"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-          
           <textarea
-            value={sourceText}
-            onChange={(e) => setSourceText(e.target.value)}
-            placeholder="Enter text to translate..."
-            className="w-full h-64 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Type here..."
+            className="w-full h-40 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
-          
-          <div className="mt-2 text-right text-sm text-gray-500">
-            {sourceText.length}/5000 characters
-          </div>
         </div>
 
-        {/* Translated Text */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              {getLanguageFlag(targetLang)} {getLanguageName(targetLang)}
-            </h3>
-            <div className="flex items-center gap-2">
-              {loading && (
-                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-              )}
-              {translatedText && !loading && (
-                <>
-                  <button
-                    onClick={() => speakText(translatedText, targetLang)}
-                    className="p-2 text-gray-500 hover:text-blue-600 rounded-lg transition-colors"
-                    title="Listen"
-                  >
-                    <Volume2 className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => copyToClipboard(translatedText)}
-                    className="p-2 text-gray-500 hover:text-blue-600 rounded-lg transition-colors"
-                    title="Copy"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </button>
-                </>
-              )}
-            </div>
+        {/* Output */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-medium text-gray-700">
+              {languages.find((l) => l.code === toLang).flag}{" "}
+              {languages.find((l) => l.code === toLang).name}
+            </span>
           </div>
-          
-          <div className="w-full h-64 p-4 bg-gray-50 border border-gray-300 rounded-lg overflow-y-auto">
-            {error ? (
-              <div className="text-red-600 italic">{error}</div>
-            ) : (
-              <div className="text-gray-900 whitespace-pre-wrap">
-                {translatedText || (sourceText && loading ? 'Translating...' : 'Translation will appear here...')}
-              </div>
-            )}
-          </div>
+          <textarea
+            value={translatedText}
+            readOnly
+            className="w-full h-40 p-4 border border-gray-300 rounded-lg bg-gray-50 resize-none"
+          />
         </div>
       </div>
 
-      {/* Quick Translation Examples */}
-      <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Examples</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {['hello', 'thank you', 'good morning', 'how are you', 'goodbye', 'see you later'].map((phrase) => (
-            <button
-              key={phrase}
-              onClick={() => setSourceText(phrase)}
-              className="p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <span className="text-gray-900 capitalize">{phrase}</span>
-            </button>
-          ))}
-        </div>
+      {/* Controls */}
+      <div className="flex items-center justify-between mt-6">
+        <button
+          onClick={swapLanguages}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+        >
+          <ArrowLeftRight className="w-4 h-4" />
+          Swap
+        </button>
+
+        <button
+          onClick={translateText}
+          disabled={loading || !text.trim()}
+          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors"
+        >
+          {loading ? "Translating..." : "Translate"}
+        </button>
       </div>
+
+      {/* Error */}
+      {error && (
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
     </div>
-  )
-}
+  );
+};
 
-// Debounce utility function
-function debounce(func, delay) {
-  let timeoutId
-  return (...args) => {
-    clearTimeout(timeoutId)
-    timeoutId = setTimeout(() => func.apply(null, args), delay)
-  }
-}
-
-export default LiveTranslator
+export default LiveTranslator;
