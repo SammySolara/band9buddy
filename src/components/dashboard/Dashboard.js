@@ -28,13 +28,13 @@ const Dashboard = ({ children }) => {
       path: '/dashboard/flashcards'
     },
     {
-      id: 'notebooks',
+      id: 'dictionary',
       icon: BookOpen,
-      title: 'Notebooks',
-      description: 'Ghi chép và tổ chức từ',
+      title: 'Dictionary',
+      description: 'Find New Words',
       color: 'bg-green-500',
-      comingSoon: true,
-      path: '/dashboard/notebooks'
+      comingSoon: false,
+      path: '/dashboard/dictionary'
     },
     {
       id: 'games',
@@ -70,7 +70,7 @@ const Dashboard = ({ children }) => {
     if (path.startsWith('/dashboard/flashcards/study/')) return 'Học tập'
     if (path.startsWith('/dashboard/flashcards/edit/')) return 'Chỉnh sửa bộ thẻ'
     if (path === '/dashboard/flashcards') return 'Flashcards'
-    if (path === '/dashboard/notebooks') return 'Notebooks'
+    if (path === '/dashboard/dictionary') return 'Dictionary'
     if (path === '/dashboard/games') return 'Games & Quizzes'
     if (path === '/dashboard/ielts') return 'IELTS Practice'
     if (path.startsWith('/dashboard/ielts/')) return 'IELTS Practice' // ADDED: Handle IELTS sub-routes

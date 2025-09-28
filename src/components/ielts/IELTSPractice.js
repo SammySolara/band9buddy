@@ -9,7 +9,7 @@ const IELTSPractice = () => {
     {
       id: 'reading',
       icon: BookOpen,
-      title: 'Reading Test',
+      title: 'Reading Tests',
       description: 'Luyện tập kỹ năng đọc hiểu IELTS',
       color: 'bg-blue-500',
       path: '/dashboard/ielts/reading'
@@ -17,7 +17,7 @@ const IELTSPractice = () => {
     {
       id: 'listening', 
       icon: Headphones,
-      title: 'Listening Test',
+      title: 'Listening Tests',
       description: 'Luyện tập kỹ năng nghe IELTS',
       color: 'bg-green-500',
       path: '/dashboard/ielts/listening'
@@ -25,7 +25,7 @@ const IELTSPractice = () => {
     {
       id: 'writing',
       icon: PenTool,
-      title: 'Writing Test',
+      title: 'Writing Tests',
       description: 'Luyện tập kỹ năng viết IELTS',
       color: 'bg-purple-500',
       path: '/dashboard/ielts/writing'

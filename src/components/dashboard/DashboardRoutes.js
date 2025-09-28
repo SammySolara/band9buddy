@@ -6,6 +6,10 @@ import FlashcardSets from '../flashcards/FlashcardSets'
 import SetEditorModal from '../flashcards/SetEditorModal'
 import StudyMode from '../flashcards/StudyMode'
 import IELTSPractice from '../ielts/IELTSPractice'
+import ReadingTests from '../ielts/ReadingTests'
+import ListeningTests from '../ielts/ListeningTests'
+import WritingTests from '../ielts/WritingTests'
+import DictionarySearch from '../dictionary/DictionarySearch'
 
 // Simple Coming Soon component
 const ComingSoon = ({ feature }) => {
@@ -53,6 +57,15 @@ const DashboardRoutes = () => {
           </div>
         } />
         
+        {/* Dictionary route */}
+        <Route path="/dictionary" element={
+          <div className="min-h-screen bg-gray-50">
+            <Dashboard>
+              <DictionarySearch />
+            </Dashboard>
+          </div>
+        } />
+        
         {/* IELTS Practice routes */}
         <Route path="/ielts" element={
           <div className="min-h-screen bg-gray-50">
@@ -62,13 +75,32 @@ const DashboardRoutes = () => {
           </div>
         } />
         
-        {/* IELTS Practice sections - placeholder routes */}
-        <Route path="/ielts/reading" element={<ComingSoon feature="Reading Test" />} />
-        <Route path="/ielts/listening" element={<ComingSoon feature="Listening Test" />} />
-        <Route path="/ielts/writing" element={<ComingSoon feature="Writing Test" />} />
+        {/* IELTS Practice sections - now using actual components */}
+        <Route path="/ielts/reading" element={
+          <div className="min-h-screen bg-gray-50">
+            <Dashboard>
+              <ReadingTests />
+            </Dashboard>
+          </div>
+        } />
+        
+        <Route path="/ielts/listening" element={
+          <div className="min-h-screen bg-gray-50">
+            <Dashboard>
+              <ListeningTests />
+            </Dashboard>
+          </div>
+        } />
+        
+        <Route path="/ielts/writing" element={
+          <div className="min-h-screen bg-gray-50">
+            <Dashboard>
+              <WritingTests />
+            </Dashboard>
+          </div>
+        } />
         
         {/* Coming soon routes */}
-        <Route path="/notebooks" element={<ComingSoon feature="Notebooks" />} />
         <Route path="/games" element={<ComingSoon feature="Games & Quizzes" />} />
       </Routes>
     </FlashcardProvider>
