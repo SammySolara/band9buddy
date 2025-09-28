@@ -63,7 +63,7 @@ const LiveTranslator = () => {
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-lg">
       <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
         <Languages className="w-6 h-6 text-blue-600" />
-        Live Translator (EN ↔ VI)
+        Live Translator
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
