@@ -6,7 +6,6 @@ import {
   Save,
   X,
   Upload,
-  Image,
   Palette,
   Tag,
 } from "lucide-react";
@@ -96,7 +95,7 @@ const SetEditorModal = () => {
     const fileExt = file.name.split(".").pop().toLowerCase();
     const fileName = `${cardId}-${side}-${Date.now()}.${fileExt}`;
 
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from("flashcard-images")
       .upload(fileName, file, {
         cacheControl: "3600",

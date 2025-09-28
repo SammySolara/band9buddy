@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Play, Edit3, Trash2, BookOpen, Palette } from "lucide-react";
+import { Plus, Play, Edit3, Trash2, BookOpen } from "lucide-react";
 import { useFlashcards } from "../../contexts/FlashcardContext";
 
 const FlashcardSets = () => {
@@ -137,13 +137,6 @@ const FlashcardSets = () => {
                       <p className="text-gray-600 text-sm line-clamp-2 min-h-[2.5rem]">
                         {set.description || "Không có mô tả"}
                       </p>
-                    </div>
-
-                    {/* Color palette icon */}
-                    <div
-                      className="p-2 rounded-lg ml-2"
-                      style={{ backgroundColor: lightBg }}
-                    >
                     </div>
                   </div>
 
