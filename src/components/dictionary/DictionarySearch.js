@@ -1,14 +1,25 @@
 // src/components/dictionary/DictionarySearch.js
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Search, BookOpen, Volume2, Heart, Copy, AlertCircle } from 'lucide-react'
 
 const DictionarySearch = () => {
+  const [searchParams] = useSearchParams()
   const [searchTerm, setSearchTerm] = useState('')
   const [wordData, setWordData] = useState(null)
   const [vietnameseTranslation, setVietnameseTranslation] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [searchHistory, setSearchHistory] = useState([])
+
+  // Handle URL parameter for word of the day
+  useEffect(() => {
+    const wordParam = searchParams.get('word')
+    if (wordParam) {
+      setSearchTerm(wordParam)
+      searchWord(wordParam)
+    }
+  }, [searchParams])
 
 const searchVietnameseTranslation = async (word) => {
   try {
@@ -52,7 +63,6 @@ const searchVietnameseTranslation = async (word) => {
     setVietnameseTranslation(null)
   }
 }
-
 
   const searchWord = async (word) => {
     if (!word.trim()) return
@@ -299,7 +309,7 @@ const searchVietnameseTranslation = async (word) => {
                 </button>
                 <button className="flex items-center gap-2 text-gray-500 hover:text-red-500 transition-colors">
                   <Heart className="h-4 w-4" />
-                  <span className="text-sm">Add to flashcards</span>
+                  <span className="text-sm">Add to favorites</span>
                 </button>
               </div>
             </div>

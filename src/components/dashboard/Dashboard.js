@@ -1,5 +1,5 @@
 // src/components/dashboard/Dashboard.js - Updated as Layout
-import { LogOut, BookOpen, GamepadIcon, GraduationCap, Copy, User, Settings, ArrowLeft } from 'lucide-react'
+import { LogOut, BookOpen, GamepadIcon, GraduationCap, Copy, User, Settings, ArrowLeft, Star } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useFlashcards } from '../../contexts/FlashcardContext' // Import the flashcards context
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -17,6 +17,35 @@ const Dashboard = ({ children }) => {
   // Calculate dynamic stats
   const flashcardSetsCount = sets?.length || 0
 
+  // Word of the Day - generates consistent daily word
+  const getWordOfTheDay = () => {
+    const words = [
+      'serendipity', 'eloquent', 'resilience', 'innovative', 'paramount', 'meticulous',
+      'sophisticated', 'profound', 'ambiguous', 'compelling', 'unprecedented', 'comprehensive',
+      'substantial', 'intricate', 'prominent', 'elaborate', 'authentic', 'pivotal',
+      'remarkable', 'exceptional', 'magnificent', 'extraordinary', 'phenomenal', 'quintessential',
+      'momentous', 'tremendous', 'distinguished', 'exemplary', 'outstanding', 'magnificent',
+      'breakthrough', 'revolutionary', 'transformative', 'enlightening', 'captivating', 'fascinating',
+      'intriguing', 'perplexing', 'bewildering', 'astonishing', 'astounding', 'stupendous',
+      'incredible', 'unbelievable', 'miraculous', 'spectacular', 'breathtaking', 'awe-inspiring',
+      'overwhelming', 'exhilarating', 'invigorating', 'rejuvenating', 'revitalizing', 'energizing'
+    ]
+    
+    // Use current date as seed for consistent daily word
+    const today = new Date()
+    const dateString = today.toISOString().split('T')[0] // YYYY-MM-DD format
+    const seed = dateString.split('-').reduce((acc, num) => acc + parseInt(num), 0)
+    const wordIndex = seed % words.length
+    
+    return words[wordIndex]
+  }
+
+  const wordOfTheDay = getWordOfTheDay()
+
+  const handleWordOfDayClick = () => {
+    navigate(`/dashboard/dictionary?word=${wordOfTheDay}`)
+  }
+
   const features = [
     {
       id: 'flashcards',
@@ -31,9 +60,9 @@ const Dashboard = ({ children }) => {
       id: 'dictionary',
       icon: BookOpen,
       title: 'Dictionary',
-      description: 'Find New Words',
+      description: 'Tra từ điển tiếng Anh',
       color: 'bg-green-500',
-      comingSoon: false,
+      comingSoon: false, // CHANGED: Set to false to enable routing
       path: '/dashboard/dictionary'
     },
     {
@@ -103,6 +132,28 @@ const Dashboard = ({ children }) => {
         </p>
       </div>
 
+      {/* Word of the Day Section */}
+      <div className="mb-8">
+        <div 
+          onClick={handleWordOfDayClick}
+          className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg p-6 cursor-pointer transform hover:scale-105 transition-all duration-300 text-white"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Star className="h-5 w-5" />
+                <span className="text-sm font-medium opacity-90">Word of the Day</span>
+              </div>
+              <h3 className="text-2xl font-bold mb-1">{wordOfTheDay}</h3>
+              <p className="text-sm opacity-80">Click to explore this word's meaning, pronunciation, and examples</p>
+            </div>
+            <div className="text-right">
+              <BookOpen className="h-8 w-8 opacity-75" />
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Stats Cards - UPDATED: Dynamic counts */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
@@ -123,7 +174,7 @@ const Dashboard = ({ children }) => {
               <BookOpen className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Từ vựng đã học</p>
+              <p className="text-sm font-medium text-gray-600">Từ đã tra</p>
               <p className="text-2xl font-semibold text-gray-900">0</p>
             </div>
           </div>
