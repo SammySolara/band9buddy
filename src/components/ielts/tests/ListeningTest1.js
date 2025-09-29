@@ -67,17 +67,18 @@ const ListeningTest1 = ({ onComplete, onExit }) => {
   }
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.addEventListener('timeupdate', handleTimeUpdate)
-      audioRef.current.addEventListener('loadedmetadata', handleLoadedMetadata)
+    const audio = audioRef.current;
+    if (audio) {
+      audio.addEventListener("timeupdate", handleTimeUpdate);
+      audio.addEventListener("loadedmetadata", handleLoadedMetadata);
     }
     return () => {
-      if (audioRef.current) {
-        audioRef.current.removeEventListener('timeupdate', handleTimeUpdate)
-        audioRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      if (audio) {
+        audio.removeEventListener("timeupdate", handleTimeUpdate);
+        audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
       }
-    }
-  }, [currentSection])
+    };
+  }, [currentSection]);
 
   const handleTimeUpdate = () => {
     setCurrentTime(audioRef.current?.currentTime || 0)
