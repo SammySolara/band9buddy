@@ -12,20 +12,16 @@ import {
   Languages,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
-import { useFlashcards } from "../../contexts/FlashcardContext";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const Dashboard = ({ children }) => {
   const { user, signOut } = useAuth();
-  const { sets } = useFlashcards();
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
   };
-
-  const flashcardSetsCount = sets?.length || 0;
 
   const getWordOfTheDay = () => {
     const words = [
