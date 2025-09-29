@@ -16,30 +16,6 @@ const ReadingTests = () => {
       bestScore: null, // Will come from user data
       attempts: 0
     },
-    {
-      id: 'reading-2', 
-      title: 'Academic Reading Test 2',
-      description: 'Technology and Society',
-      difficulty: 'Advanced',
-      duration: 60,
-      passages: 3,
-      questions: 40,
-      topics: ['Technology', 'Social Issues', 'Innovation'],
-      bestScore: 7.5, // Mock score
-      attempts: 2
-    },
-    {
-      id: 'reading-3',
-      title: 'General Training Reading Test 1',
-      description: 'Workplace Communication',
-      difficulty: 'Intermediate',
-      duration: 60,
-      passages: 3,
-      questions: 40,
-      topics: ['Business', 'Communication', 'Work'],
-      bestScore: null,
-      attempts: 0
-    }
   ]
 
   const getDifficultyColor = (difficulty) => {

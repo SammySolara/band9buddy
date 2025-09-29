@@ -28,34 +28,6 @@ const ListeningTests = () => {
       attempts: 0,
       component: ListeningTest1,
     },
-    {
-      id: "listening-2",
-      title: "IELTS Listening Test 2",
-      description: "Job Interview & Business Meeting",
-      difficulty: "Advanced",
-      duration: 30,
-      sections: 4,
-      questions: 40,
-      audioLength: "28 min",
-      topics: ["Business", "Employment", "Professional"],
-      bestScore: 8.0,
-      attempts: 1,
-      component: null,
-    },
-    {
-      id: "listening-3",
-      title: "IELTS Listening Test 3",
-      description: "Travel Information & Hotel Booking",
-      difficulty: "Beginner",
-      duration: 30,
-      sections: 4,
-      questions: 40,
-      audioLength: "24 min",
-      topics: ["Travel", "Tourism", "Services"],
-      bestScore: 6.5,
-      attempts: 3,
-      component: null,
-    },
   ];
 
   const getDifficultyColor = (difficulty) => {
@@ -82,7 +54,6 @@ const ListeningTests = () => {
 
   const handleTestComplete = (results) => {
     console.log("Test completed:", results);
-    setActiveTest(null);
   };
 
   const handleExitTest = () => {
@@ -143,7 +114,7 @@ const ListeningTests = () => {
               <Award className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Best Score</p>
+              <p className="text-sm font-medium text-gray-600">Average Score</p>
               <p className="text-2xl font-semibold text-gray-900">
                 {Math.max(
                   ...listeningTests

@@ -18,34 +18,6 @@ const WritingTests = () => {
       bestScore: null,
       attempts: 0
     },
-    {
-      id: 'writing-2',
-      title: 'Academic Writing Test 2',
-      description: 'Process Diagram & Essay: Environmental Issues',
-      type: 'Academic',
-      difficulty: 'Advanced',
-      duration: 60,
-      tasks: 2,
-      task1Type: 'Process Diagram',
-      task2Type: 'Discussion Essay',
-      topics: ['Environment', 'Climate', 'Process'],
-      bestScore: 7.0,
-      attempts: 2
-    },
-    {
-      id: 'writing-3',
-      title: 'General Training Writing Test 1',
-      description: 'Complaint Letter & Essay: Work-Life Balance',
-      type: 'General Training',
-      difficulty: 'Intermediate',
-      duration: 60,
-      tasks: 2,
-      task1Type: 'Formal Letter',
-      task2Type: 'Opinion Essay',
-      topics: ['Work', 'Lifestyle', 'Communication'],
-      bestScore: 6.5,
-      attempts: 1
-    }
   ]
 
   const getDifficultyColor = (difficulty) => {
