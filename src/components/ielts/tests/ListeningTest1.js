@@ -12,7 +12,7 @@ const ListeningTest1 = ({ onComplete, onExit }) => {
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [answers, setAnswers] = useState({})
-  const [showResults, setShowResults] = useState(false)
+  const [setShowResults] = useState(false)
   const audioRef = useRef(null)
 
   // ANSWER KEY - EDIT THESE
