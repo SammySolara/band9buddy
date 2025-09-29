@@ -1,35 +1,75 @@
 // src/components/ielts/ReadingTests.js
-import { BookOpen, Clock, Award, Play } from 'lucide-react'
+import { useState } from "react";
+import { BookOpen, Clock, Award, Play, ArrowLeft } from "lucide-react";
+import ReadingTest1 from "./tests/ReadingTest1.js";
 
 const ReadingTests = () => {
-  // Mock test data - you'll replace this with your actual tests
+  const [activeTest, setActiveTest] = useState(null);
+
   const readingTests = [
     {
-      id: 'reading-1',
-      title: 'Academic Reading Test 1',
-      description: 'Climate Change and Global Warming',
-      difficulty: 'Intermediate',
-      duration: 60, // minutes
+      id: "reading-1",
+      title: "Academic Reading Test 1",
+      description: "Climate Change and Global Warming",
+      difficulty: "Intermediate",
+      duration: 60,
       passages: 3,
       questions: 40,
-      topics: ['Environment', 'Science', 'Policy'],
-      bestScore: null, // Will come from user data
-      attempts: 0
+      topics: ["Environment", "Science", "Policy"],
+      bestScore: null,
+      attempts: 0,
+      component: ReadingTest1,
     },
-  ]
+  ];
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
-      case 'Beginner': return 'bg-green-100 text-green-800'
-      case 'Intermediate': return 'bg-yellow-100 text-yellow-800'
-      case 'Advanced': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case "Beginner":
+        return "bg-green-100 text-green-800";
+      case "Intermediate":
+        return "bg-yellow-100 text-yellow-800";
+      case "Advanced":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const handleStartTest = (testId) => {
-    // Navigate to test interface - you'll implement this later
-    console.log(`Starting reading test: ${testId}`)
+    const test = readingTests.find((t) => t.id === testId);
+    if (test && test.component) {
+      setActiveTest(test);
+    } else {
+      alert("Test chưa sẵn sàng!");
+    }
+  };
+
+  const handleTestComplete = (results) => {
+    console.log("Test completed:", results);
+  };
+
+  const handleExitTest = () => {
+    setActiveTest(null);
+  };
+
+  // 🔑 Same solution as ListeningTests.js
+  if (activeTest) {
+    const TestComponent = activeTest.component;
+    return (
+      <div>
+        <button
+          onClick={handleExitTest}
+          className="flex items-center gap-2 mb-4 text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          Back to Tests
+        </button>
+        <TestComponent
+          onComplete={handleTestComplete}
+          onExit={handleExitTest}
+        />
+      </div>
+    );
   }
 
   return (
@@ -40,7 +80,8 @@ const ReadingTests = () => {
           IELTS Reading Tests 📖
         </h2>
         <p className="text-gray-600">
-          Luyện tập kỹ năng đọc hiểu với các bài test theo chuẩn IELTS. Mỗi bài test gồm 3 đoạn văn và 40 câu hỏi trong 60 phút.
+          Luyện tập kỹ năng đọc hiểu với các bài test theo chuẩn IELTS. Mỗi bài
+          test gồm 3 đoạn văn và 40 câu hỏi trong 60 phút.
         </p>
       </div>
 
@@ -52,8 +93,12 @@ const ReadingTests = () => {
               <BookOpen className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Available Tests</p>
-              <p className="text-2xl font-semibold text-gray-900">{readingTests.length}</p>
+              <p className="text-sm font-medium text-gray-600">
+                Available Tests
+              </p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {readingTests.length}
+              </p>
             </div>
           </div>
         </div>
@@ -66,7 +111,11 @@ const ReadingTests = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Best Score</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {Math.max(...readingTests.filter(t => t.bestScore).map(t => t.bestScore)) || 'N/A'}
+                {Math.max(
+                  ...readingTests
+                    .filter((t) => t.bestScore)
+                    .map((t) => t.bestScore)
+                ) || "N/A"}
               </p>
             </div>
           </div>
@@ -78,9 +127,11 @@ const ReadingTests = () => {
               <Clock className="h-6 w-6 text-purple-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Tests Completed</p>
+              <p className="text-sm font-medium text-gray-600">
+                Tests Completed
+              </p>
               <p className="text-2xl font-semibold text-gray-900">
-                {readingTests.filter(t => t.attempts > 0).length}
+                {readingTests.filter((t) => t.attempts > 0).length}
               </p>
             </div>
           </div>
@@ -90,12 +141,21 @@ const ReadingTests = () => {
       {/* Tests Grid */}
       <div className="space-y-6">
         {readingTests.map((test) => (
-          <div key={test.id} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6">
+          <div
+            key={test.id}
+            className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6"
+          >
             <div className="flex flex-col lg:flex-row lg:items-center justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3">
-                  <h3 className="text-xl font-semibold text-gray-900">{test.title}</h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(test.difficulty)}`}>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {test.title}
+                  </h3>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(
+                      test.difficulty
+                    )}`}
+                  >
                     {test.difficulty}
                   </span>
                   {test.bestScore && (
@@ -104,9 +164,9 @@ const ReadingTests = () => {
                     </span>
                   )}
                 </div>
-                
+
                 <p className="text-gray-600 mb-4">{test.description}</p>
-                
+
                 <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
@@ -120,29 +180,32 @@ const ReadingTests = () => {
                     <span>{test.questions} câu hỏi</span>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-2">
                   {test.topics.map((topic, index) => (
-                    <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded"
+                    >
                       {topic}
                     </span>
                   ))}
                 </div>
-                
+
                 {test.attempts > 0 && (
                   <div className="mt-3 text-sm text-gray-500">
                     Đã làm {test.attempts} lần
                   </div>
                 )}
               </div>
-              
+
               <div className="mt-6 lg:mt-0 lg:ml-6">
                 <button
                   onClick={() => handleStartTest(test.id)}
                   className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
                 >
                   <Play className="h-4 w-4" />
-                  {test.attempts > 0 ? 'Làm lại' : 'Bắt đầu'}
+                  {test.attempts > 0 ? "Làm lại" : "Bắt đầu"}
                 </button>
               </div>
             </div>
@@ -150,7 +213,7 @@ const ReadingTests = () => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ReadingTests
+export default ReadingTests;
