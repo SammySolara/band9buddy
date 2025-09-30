@@ -1,7 +1,18 @@
-  // src/components/ielts/SpeakingTests.js
-import { Mic, Clock, Award, Play, MessageSquare } from "lucide-react";
+// src/components/ielts/SpeakingTests.js
+import { useState } from "react";
+import {
+  Mic,
+  Clock,
+  Award,
+  Play,
+  MessageSquare,
+  ArrowLeft,
+} from "lucide-react";
+import SpeakingTest1 from "./tests/SpeakingTest1.js";
 
 const SpeakingTests = () => {
+  const [activeTest, setActiveTest] = useState(null);
+
   const speakingTests = [
     {
       id: "speaking-1",
@@ -13,6 +24,7 @@ const SpeakingTests = () => {
       topics: ["Daily Life", "Personal Experience", "Abstract Discussion"],
       bestScore: null,
       attempts: 0,
+      component: SpeakingTest1,
     },
   ];
 
@@ -30,9 +42,42 @@ const SpeakingTests = () => {
   };
 
   const handleStartTest = (testId) => {
-    // Speaking tests will work differently - just show info for now
-    alert("Speaking test feature coming soon! This will guide you through a 3-part speaking simulation.");
+    const test = speakingTests.find((t) => t.id === testId);
+    if (test && test.component) {
+      setActiveTest(test);
+    } else {
+      alert("Test chưa sẵn sàng!");
+    }
   };
+
+  const handleTestComplete = (results) => {
+    console.log("Test completed:", results);
+    // You can save to database here later
+  };
+
+  const handleExitTest = () => {
+    setActiveTest(null);
+  };
+
+  // If a test is active, render the test component
+  if (activeTest) {
+    const TestComponent = activeTest.component;
+    return (
+      <div>
+        <button
+          onClick={handleExitTest}
+          className="flex items-center gap-2 mb-4 text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          Back to Tests
+        </button>
+        <TestComponent
+          onComplete={handleTestComplete}
+          onExit={handleExitTest}
+        />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -56,10 +101,10 @@ const SpeakingTests = () => {
               How Speaking Tests Work
             </h3>
             <p className="text-orange-800 text-sm">
-              Speaking tests will guide you through the 3 parts of the IELTS
-              Speaking exam. Record your responses or practice speaking aloud,
-              then use ChatGPT to get feedback on your fluency, vocabulary,
-              grammar, and pronunciation.
+              Speaking tests use your browser's speech recognition to transcribe
+              your answers. You'll see band 8-9 model answers to emulate, and
+              you can self-assess your fluency, vocabulary, grammar, and
+              pronunciation.
             </p>
           </div>
         </div>
