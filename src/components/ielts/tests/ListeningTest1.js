@@ -104,7 +104,7 @@ const ListeningTest1 = ({ onComplete, onExit }) => {
       clearInterval(timerRef.current);
       handleSubmit();
     }
-  }, [timeLeft, handleSubmit]);
+  }, [timeLeft]);
 
   useEffect(() => {
     const audio = audioRef.current;
