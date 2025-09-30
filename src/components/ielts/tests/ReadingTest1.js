@@ -20,46 +20,46 @@ const ReadingTest1 = ({ onComplete, onExit }) => {
 
   // ANSWER KEY - You'll fill this in
   const answerKey = {
-    1: "", // oval
-    2: "", // husk
-    3: "", // seed
-    4: "", // mace
-    5: "", // FALSE
-    6: "", // NOT GIVEN
-    7: "", // TRUE
-    8: "", // Arabs
-    9: "", // plague
-    10: "", // lime
-    11: "", // Run
-    12: "", // Mauritius
-    13: "", // tsunami/volcanic
-    14: "", // C
-    15: "", // B
-    16: "", // E
-    17: "", // G
-    18: "", // D
-    19: "", // human error
-    20: "", // car-sharing
-    21: "", // ownership
-    22: "", // mileage
-    23: "", // C
-    24: "", // D
-    25: "", // A
-    26: "", // E
-    27: "", // A
-    28: "", // C
-    29: "", // C
-    30: "", // D
-    31: "", // A
-    32: "", // B
-    33: "", // E
-    34: "", // A
-    35: "", // D
-    36: "", // E
-    37: "", // B
-    38: "", // expeditions
-    39: "", // uncontacted tribes
-    40: "", // land surface
+    1: "Oval", // oval
+    2: "Husk", // husk
+    3: "Seed", // seed
+    4: "Mace", // mace
+    5: "FALSE", // FALSE
+    6: "NOT GIVEN", // NOT GIVEN
+    7: "TRUE", // TRUE
+    8: "Arabs", // Arabs
+    9: "Plague", // plague
+    10: "Lime", // lime
+    11: "Run", // Run
+    12: "Mauritius", // Mauritius
+    13: "Tsunami", // tsunami/volcanic
+    14: "C", // C
+    15: "B", // B
+    16: "E", // E
+    17: "G", // G
+    18: "D", // D
+    19: "Human Error", // human error
+    20: "Car-sharing", // car-sharing
+    21: "Ownership", // ownership
+    22: "Mileage", // mileage
+    23: "C", // C
+    24: "D", // D
+    25: "A", // A
+    26: "E", // E
+    27: "A", // A
+    28: "C", // C
+    29: "C", // C
+    30: "D", // D
+    31: "A", // A
+    32: "B", // B
+    33: "E", // E
+    34: "A", // A
+    35: "D", // D
+    36: "E", // E
+    37: "B", // B
+    38: "Expeditions", // expeditions
+    39: "Uncontacted Tribes", // uncontacted tribes
+    40: "Land Surface", // land surface
   };
 
   // Timer effect
