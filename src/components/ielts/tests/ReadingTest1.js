@@ -79,7 +79,7 @@ const ReadingTest1 = ({ onComplete, onExit }) => {
       clearInterval(timerRef.current);
       handleSubmit();
     }
-  }, [timeLeft]);
+  }, [timeLeft, handleSubmit]);
 
   // Scroll to top when passage changes
   useEffect(() => {

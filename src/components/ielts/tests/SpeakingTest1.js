@@ -1,8 +1,6 @@
 // src/components/ielts/tests/SpeakingTest1.js
 import { useState, useRef, useEffect } from "react";
 import {
-  Clock,
-  CheckCircle,
   ArrowLeft,
   Mic,
   MicOff,
@@ -21,7 +19,7 @@ const SpeakingTest1 = ({ onComplete, onExit }) => {
   const [selectedModel, setSelectedModel] = useState(null);
   const [accuracy, setAccuracy] = useState(0);
   const [selfRatings, setSelfRatings] = useState({});
-  const [completedParts, setCompletedParts] = useState({});
+  const [setCompletedParts] = useState({});
   const [showResults, setShowResults] = useState(false);
 
   const recognitionRef = useRef(null);
