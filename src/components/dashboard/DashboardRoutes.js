@@ -1,18 +1,18 @@
-// src/components/dashboard/DashboardRoutes.js - Updated with IELTS routes
-import { Routes, Route } from 'react-router-dom'
-import { FlashcardProvider } from '../../contexts/FlashcardContext'
-import Dashboard from './Dashboard'
-import FlashcardSets from '../flashcards/FlashcardSets'
-import SetEditorModal from '../flashcards/SetEditorModal'
-import StudyMode from '../flashcards/StudyMode'
-import IELTSPractice from '../ielts/IELTSPractice'
-import ReadingTests from '../ielts/ReadingTests'
-import ListeningTests from '../ielts/ListeningTests'
-import WritingTests from '../ielts/WritingTests'
-import DictionarySearch from '../dictionary/DictionarySearch'
-import LiveTranslator from '../translator/LiveTranslator'
+// src/components/dashboard/DashboardRoutes.js
+import { Routes, Route } from "react-router-dom";
+import { FlashcardProvider } from "../../contexts/FlashcardContext";
+import Dashboard from "./Dashboard";
+import FlashcardSets from "../flashcards/FlashcardSets";
+import SetEditorModal from "../flashcards/SetEditorModal";
+import StudyMode from "../flashcards/StudyMode";
+import IELTSPractice from "../ielts/IELTSPractice";
+import ReadingTests from "../ielts/ReadingTests";
+import ListeningTests from "../ielts/ListeningTests";
+import WritingTests from "../ielts/WritingTests";
+import SpeakingTests from "../ielts/SpeakingTests";
+import DictionarySearch from "../dictionary/DictionarySearch";
+import LiveTranslator from "../translator/LiveTranslator";
 
-// Simple Coming Soon component
 const ComingSoon = ({ feature }) => {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -23,98 +23,132 @@ const ComingSoon = ({ feature }) => {
         </div>
       </Dashboard>
     </div>
-  )
-}
+  );
+};
 
 const DashboardRoutes = () => {
   return (
     <FlashcardProvider>
       <Routes>
-        {/* Dashboard home */}
         <Route path="/" element={<Dashboard />} />
-        
-        {/* Flashcard routes */}
-        <Route path="/flashcards" element={
-          <div className="min-h-screen bg-gray-50">
-            <Dashboard>
-              <FlashcardSets />
-            </Dashboard>
-          </div>
-        } />
-        
-        <Route path="/flashcards/edit/:setId" element={
-          <div className="min-h-screen bg-gray-50">
-            <Dashboard>
-              <SetEditorModal />
-            </Dashboard>
-          </div>
-        } />
-        
-        <Route path="/flashcards/study/:setId" element={
-          <div className="min-h-screen bg-gray-50">
-            <Dashboard>
-              <StudyMode />
-            </Dashboard>
-          </div>
-        } />
-        
-        {/* Dictionary route */}
-        <Route path="/dictionary" element={
-          <div className="min-h-screen bg-gray-50">
-            <Dashboard>
-              <DictionarySearch />
-            </Dashboard>
-          </div>
-        } />
-        
-        {/* Translator route */}
-        <Route path="/translator" element={
-          <div className="min-h-screen bg-gray-50">
-            <Dashboard>
-              <LiveTranslator />
-            </Dashboard>
-          </div>
-        } />
-        
-        {/* IELTS Practice routes */}
-        <Route path="/ielts" element={
-          <div className="min-h-screen bg-gray-50">
-            <Dashboard>
-              <IELTSPractice />
-            </Dashboard>
-          </div>
-        } />
-        
-        {/* IELTS Practice sections - now using actual components */}
-        <Route path="/ielts/reading" element={
-          <div className="min-h-screen bg-gray-50">
-            <Dashboard>
-              <ReadingTests />
-            </Dashboard>
-          </div>
-        } />
-        
-        <Route path="/ielts/listening" element={
-          <div className="min-h-screen bg-gray-50">
-            <Dashboard>
-              <ListeningTests />
-            </Dashboard>
-          </div>
-        } />
-        
-        <Route path="/ielts/writing" element={
-          <div className="min-h-screen bg-gray-50">
-            <Dashboard>
-              <WritingTests />
-            </Dashboard>
-          </div>
-        } />
-        
-        {/* Coming soon routes */}
-        <Route path="/games" element={<ComingSoon feature="Games & Quizzes" />} />
+
+        <Route
+          path="/flashcards"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <FlashcardSets />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/flashcards/edit/:setId"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <SetEditorModal />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/flashcards/study/:setId"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <StudyMode />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/dictionary"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <DictionarySearch />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/translator"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <LiveTranslator />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/ielts"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <IELTSPractice />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/ielts/reading"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <ReadingTests />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/ielts/listening"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <ListeningTests />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/ielts/writing"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <WritingTests />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/ielts/speaking" // ✅ FIXED - Changed from /ielts/listening
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <SpeakingTests />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/games"
+          element={<ComingSoon feature="Games & Quizzes" />}
+        />
       </Routes>
     </FlashcardProvider>
-  )
-}
+  );
+};
 
-export default DashboardRoutes
+export default DashboardRoutes;
