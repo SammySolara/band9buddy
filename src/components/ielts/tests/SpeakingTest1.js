@@ -19,7 +19,7 @@ const SpeakingTest1 = ({ onComplete, onExit }) => {
   const [selectedModel, setSelectedModel] = useState(null);
   const [accuracy, setAccuracy] = useState(0);
   const [selfRatings, setSelfRatings] = useState({});
-  const [setCompletedParts] = useState({});
+  const [completedParts, setCompletedParts] = useState({});
   const [showResults, setShowResults] = useState(false);
 
   const recognitionRef = useRef(null);
