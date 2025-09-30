@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
+import Logo from "../../assets/B9Logo.png";
 
 const Dashboard = ({ children }) => {
   const { user, signOut } = useAuth();
@@ -187,12 +188,23 @@ const Dashboard = ({ children }) => {
   const renderHomeContent = () => (
     <>
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          Xin chào, {user?.user_metadata?.name || "bạn"}! 👋
-        </h2>
-        <p className="text-gray-600">
-          Sẵn sàng học tiếng Anh hôm nay? Hãy chọn một hoạt động để bắt đầu.
-        </p>
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              Xin chào, {user?.user_metadata?.name || "bạn"}! 👋
+            </h2>
+            <p className="text-gray-600">
+              Sẵn sàng học tiếng Anh hôm nay? Hãy chọn một hoạt động để bắt đầu.
+            </p>
+          </div>
+          <div className="ml-6 flex-shrink-0">
+            <img
+              src={Logo}
+              alt="Band 9 Buddy Logo"
+              className="w-32 h-32 object-contain rounded-lg shadow-md"
+            />
+          </div>
+        </div>
       </div>
 
       <div className="mb-8">
