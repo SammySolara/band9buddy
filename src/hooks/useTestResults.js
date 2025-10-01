@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
-
 export const useTestResults = (testType) => {
     const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
     const { user, session } = useAuth();
     const [results, setResults] = useState({
-    tests: [], // Individual test results by test_number
+    tests: [],
     totalCompleted: 0,
     averageBand: null,
     averageScore: null,
@@ -28,7 +27,7 @@ export const useTestResults = (testType) => {
             method: "GET",
             headers: {
               Authorization: `Bearer ${session.access_token}`,
-              apikey: supabaseKey, // Add your anon key here
+              apikey: supabaseKey,
               "Content-Type": "application/json",
             },
           }
@@ -40,32 +39,82 @@ export const useTestResults = (testType) => {
 
         const data = await response.json();
 
-        // Group by test_number and get best attempt for each
-        const testsByNumber = data.reduce((acc, test) => {
+        // Group by test_number
+        const testsByNumber = {};
+
+        data.forEach((test) => {
           const num = test.test_number;
-          if (!acc[num] || test.band_score > acc[num].band_score) {
-            acc[num] = {
-              test_number: num,
-              attempts: data.filter((t) => t.test_number === num).length,
-              best_score: test.score,
-              best_band: test.band_score,
-              time_taken: test.time_taken_seconds,
-              completed_at: test.completed_at,
+
+          if (!testsByNumber[num]) {
+            testsByNumber[num] = [];
+          }
+          testsByNumber[num].push(test);
+        });
+
+        // Get best attempt for each test number
+        const tests = Object.keys(testsByNumber).map((num) => {
+          const attempts = testsByNumber[num];
+          let best;
+
+          if (testType === "writing") {
+            // For writing, find highest word count
+            best = attempts.reduce((prev, curr) =>
+              (curr.word_count || 0) > (prev.word_count || 0) ? curr : prev
+            );
+            return {
+              test_number: parseInt(num),
+              attempts: attempts.length,
+              best_score: best.word_count || 0,
+              best_band: null,
+              time_taken: best.time_taken_seconds,
+              completed_at: best.completed_at,
+            };
+          } else if (testType === "speaking") {
+            // For speaking, find highest rating
+            best = attempts.reduce((prev, curr) =>
+              (curr.average_self_rating || 0) > (prev.average_self_rating || 0)
+                ? curr
+                : prev
+            );
+            return {
+              test_number: parseInt(num),
+              attempts: attempts.length,
+              best_score: best.average_self_rating || 0,
+              best_band: null,
+              time_taken: null,
+              completed_at: best.completed_at,
+            };
+          } else {
+            // For listening/reading, find highest band score
+            best = attempts.reduce((prev, curr) =>
+              (curr.band_score || 0) > (prev.band_score || 0) ? curr : prev
+            );
+            return {
+              test_number: parseInt(num),
+              attempts: attempts.length,
+              best_score: best.score || 0,
+              best_band: best.band_score || 0,
+              time_taken: best.time_taken_seconds,
+              completed_at: best.completed_at,
             };
           }
-          return acc;
-        }, {});
+        });
 
-        const tests = Object.values(testsByNumber);
         const totalCompleted = tests.length;
-        const averageBand =
-          totalCompleted > 0
-            ? tests.reduce((sum, t) => sum + t.best_band, 0) / totalCompleted
-            : null;
-        const averageScore =
-          totalCompleted > 0
-            ? tests.reduce((sum, t) => sum + t.best_score, 0) / totalCompleted
-            : null;
+        let averageBand = null;
+        let averageScore = null;
+
+        if (totalCompleted > 0) {
+          if (testType === "writing" || testType === "speaking") {
+            averageScore =
+              tests.reduce((sum, t) => sum + t.best_score, 0) / totalCompleted;
+          } else {
+            averageBand =
+              tests.reduce((sum, t) => sum + t.best_band, 0) / totalCompleted;
+            averageScore =
+              tests.reduce((sum, t) => sum + t.best_score, 0) / totalCompleted;
+          }
+        }
 
         setResults({
           tests,
