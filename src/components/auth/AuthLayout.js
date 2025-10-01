@@ -11,7 +11,7 @@ const AuthLayout = ({ children }) => {
             <img
               src={Logo}
               alt="Band 9 Buddy Logo"
-              className="w-60 h-60 object-contain drop-shadow-2xl"
+              className="w-60 h-60 object-contain drop-shadow-2xl hidden md:block"
             />
           </div>
           <div className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20 relative z-10">
