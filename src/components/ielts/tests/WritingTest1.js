@@ -6,10 +6,13 @@ import {
   MessageSquare,
   AlertCircle,
 } from "lucide-react";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const TOTAL_TIME = 2400; // 40 minutes in seconds
 
 const WritingTest1 = ({ onComplete, onExit }) => {
+  const { user, session } = useAuth();
+
   const [answer, setAnswer] = useState("");
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [showResults, setShowResults] = useState(false);
@@ -59,11 +62,54 @@ const WritingTest1 = ({ onComplete, onExit }) => {
       .filter((word) => word.length > 0).length;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     clearInterval(timerRef.current);
     const timeTaken = TOTAL_TIME - timeLeft;
     setCompletedTime(timeTaken);
     setShowResults(true);
+
+    // Save to database
+    try {
+      if (!session) {
+        throw new Error("No active session");
+      }
+
+      const response = await fetch(
+        "https://smjypkielfgtyaddrpbb.supabase.co/functions/v1/handle-submit",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            user_id: user.id,
+            test_type: "writing",
+            test_number: 1,
+            task_number: 1,
+            completed_at: new Date().toISOString(),
+            time_taken_seconds: timeTaken,
+            status: "completed",
+            essay_text: answer,
+            word_count: countWords(answer),
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Server error:", errorData);
+        throw new Error(errorData.error || "Failed to save test");
+      }
+
+      const data = await response.json();
+      console.log("Test saved successfully:", data);
+    } catch (error) {
+      console.error("Failed to save test:", error);
+      alert(
+        "Warning: Test results may not have been saved. Please contact support if this persists."
+      );
+    }
 
     if (onComplete) {
       onComplete({

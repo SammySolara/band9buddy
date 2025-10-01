@@ -1,5 +1,6 @@
 // src/components/ielts/ListeningTest1.js
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "../../../contexts/AuthContext";
 import {
   Play,
   Pause,
@@ -21,6 +22,8 @@ import styleGuideImage from "../../../assets/IELTS-Practice-Test-01-Section3.jpg
 const TOTAL_TIME = 2400; // 40 minutes in seconds
 
 const ListeningTest1 = ({ onComplete, onExit }) => {
+  const { user, session } = useAuth();
+
   const [currentSection, setCurrentSection] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -169,8 +172,7 @@ const ListeningTest1 = ({ onComplete, onExit }) => {
     return 3.5;
   };
 
-  // UPDATED: handleSubmit to handle results and timing
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Stop the audio and the timer
     if (audioRef.current) audioRef.current.pause();
     clearInterval(timerRef.current);
@@ -186,13 +188,57 @@ const ListeningTest1 = ({ onComplete, onExit }) => {
     });
 
     const band = calculateBandScore(correct);
-    const completedTime = TOTAL_TIME - timeLeft; // Track completed time
+    const completedTime = TOTAL_TIME - timeLeft;
 
     const resultDetails = { correct, total: 40, band, completedTime };
-    setResultsData(resultDetails); // Store results data
-    setShowResults(true); // Show the results screen
+    setResultsData(resultDetails);
+    setShowResults(true);
 
-    // Pass data to parent component for DB saving later
+    // Save to database
+    try {
+      if (!session) {
+        throw new Error("No active session");
+      }
+
+      const response = await fetch(
+        "https://smjypkielfgtyaddrpbb.supabase.co/functions/v1/handle-submit",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            user_id: user.id,
+            test_type: "listening",
+            test_number: 1,
+            completed_at: new Date().toISOString(),
+            time_taken_seconds: completedTime,
+            status: "completed",
+            score: correct,
+            total_questions: 40,
+            band_score: band,
+            answers: answers,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Server error:", errorData);
+        throw new Error(errorData.error || "Failed to save test");
+      }
+
+      const data = await response.json();
+      console.log("Test saved successfully:", data);
+    } catch (error) {
+      console.error("Failed to save test:", error);
+      alert(
+        "Warning: Test results may not have been saved. Please contact support if this persists."
+      );
+    }
+
+    // Pass data to parent component if needed
     if (onComplete) onComplete(resultDetails);
   };
 

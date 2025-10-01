@@ -9,8 +9,11 @@ import {
   AlertCircle,
   Star,
 } from "lucide-react";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const SpeakingTest1 = ({ onComplete, onExit }) => {
+  const { user, session } = useAuth();
+
   const [currentPart, setCurrentPart] = useState(1);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
@@ -177,7 +180,7 @@ const SpeakingTest1 = ({ onComplete, onExit }) => {
     return part.questions[currentQuestion];
   };
 
-  const moveToNextQuestion = () => {
+  const moveToNextQuestion = async () => {
     const part = SPEAKING_TEST[`part${currentPart}`];
     if (currentPart === 2 || currentQuestion >= part.questions.length - 1) {
       setCompletedParts((prev) => ({ ...prev, [currentPart]: true }));
@@ -185,6 +188,54 @@ const SpeakingTest1 = ({ onComplete, onExit }) => {
         setCurrentPart(currentPart + 1);
         setCurrentQuestion(0);
       } else {
+        // Calculate average rating
+        const allRatings = Object.values(selfRatings);
+        const avgRating =
+          allRatings.length > 0
+            ? allRatings.reduce((a, b) => a + b, 0) / allRatings.length
+            : 0;
+
+        // Save to database
+        try {
+          if (!session) {
+            throw new Error("No active session");
+          }
+
+          const response = await fetch(
+            "https://smjypkielfgtyaddrpbb.supabase.co/functions/v1/handle-submit",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({
+                user_id: user.id,
+                test_type: "speaking",
+                test_number: 1,
+                completed_at: new Date().toISOString(),
+                status: "completed",
+                speaking_data: selfRatings,
+                average_self_rating: avgRating,
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Server error:", errorData);
+            throw new Error(errorData.error || "Failed to save test");
+          }
+
+          const data = await response.json();
+          console.log("Test saved successfully:", data);
+        } catch (error) {
+          console.error("Failed to save test:", error);
+          alert(
+            "Warning: Test results may not have been saved. Please contact support if this persists."
+          );
+        }
+
         setShowResults(true);
       }
     } else {
