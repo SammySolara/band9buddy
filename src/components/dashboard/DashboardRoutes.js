@@ -12,6 +12,7 @@ import WritingTests from "../ielts/WritingTests";
 import SpeakingTests from "../ielts/SpeakingTests";
 import DictionarySearch from "../dictionary/DictionarySearch";
 import LiveTranslator from "../translator/LiveTranslator";
+import GamesQuizzes from "../games/GamesQuizzes"
 
 const ComingSoon = ({ feature }) => {
   return (
@@ -143,8 +144,14 @@ const DashboardRoutes = () => {
         />
 
         <Route
-          path="/games"
-          element={<ComingSoon feature="Games & Quizzes" />}
+          path="/games" // ✅ FIXED - Changed from /ielts/listening
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <GamesQuizzes />
+              </Dashboard>
+            </div>
+          }
         />
       </Routes>
     </FlashcardProvider>

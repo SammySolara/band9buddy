@@ -132,7 +132,7 @@ const Dashboard = ({ children }) => {
       title: "Games & Quizzes",
       description: "Học qua trò chơi vui nhộn",
       color: "bg-purple-500",
-      comingSoon: true,
+      comingSoon: false,
       path: "/dashboard/games",
     },
     {
