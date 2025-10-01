@@ -1,30 +1,30 @@
-// src/components/auth/LoginForm.js
-import { useState } from 'react'
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
-import { useAuth } from '../../contexts/AuthContext'
+// Updated LoginForm.js with "Forgot Password" link
+import { useState } from "react";
+import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
 
-const LoginForm = ({ onToggleForm }) => {
-  const [formData, setFormData] = useState({ email: '', password: '' })
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
-  const { signIn, loading } = useAuth()
+const LoginForm = ({ onToggleForm, onForgotPassword }) => {
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const { signIn, loading } = useAuth();
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    
-    const result = await signIn(formData.email, formData.password)
+    e.preventDefault();
+    setError("");
+
+    const result = await signIn(formData.email, formData.password);
     if (!result.success) {
-      setError(result.error)
+      setError(result.error);
     }
-  }
+  };
 
   const handleChange = (e) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
-    }))
-  }
+      [e.target.name]: e.target.value,
+    }));
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -33,7 +33,7 @@ const LoginForm = ({ onToggleForm }) => {
           {error}
         </div>
       )}
-      
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Email
@@ -53,13 +53,22 @@ const LoginForm = ({ onToggleForm }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Mật khẩu / Password
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Mật khẩu / Password
+          </label>
+          <button
+            type="button"
+            onClick={onForgotPassword}
+            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+          >
+            Quên mật khẩu?
+          </button>
+        </div>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           <input
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             name="password"
             value={formData.password}
             onChange={handleChange}
@@ -72,7 +81,11 @@ const LoginForm = ({ onToggleForm }) => {
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
           >
-            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            {showPassword ? (
+              <EyeOff className="h-5 w-5" />
+            ) : (
+              <Eye className="h-5 w-5" />
+            )}
           </button>
         </div>
       </div>
@@ -82,7 +95,7 @@ const LoginForm = ({ onToggleForm }) => {
         disabled={loading}
         className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? 'Đang đăng nhập...' : 'Đăng nhập / Sign In'}
+        {loading ? "Đang đăng nhập..." : "Đăng nhập / Sign In"}
       </button>
 
       <div className="text-center">
@@ -96,7 +109,7 @@ const LoginForm = ({ onToggleForm }) => {
         </button>
       </div>
     </form>
-  )
-}
+  );
+};
 
-export default LoginForm
+export default LoginForm;
