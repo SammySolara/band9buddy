@@ -9,9 +9,12 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import SpeakingTest1 from "./tests/SpeakingTest1.js";
+import { useTestResults } from "../../hooks/useTestResults";
 
 const SpeakingTests = () => {
   const [activeTest, setActiveTest] = useState(null);
+  const { tests, totalCompleted, averageScore, loading } =
+    useTestResults("speaking");
 
   const speakingTests = [
     {
@@ -19,14 +22,23 @@ const SpeakingTests = () => {
       title: "IELTS Speaking Test 1",
       description: "General topics: Home, Hobbies, Role Models",
       difficulty: "Intermediate",
-      duration: 15, // 11-14 minutes typical
+      duration: 15,
       parts: 3,
       topics: ["Daily Life", "Personal Experience", "Abstract Discussion"],
-      bestScore: null,
-      attempts: 0,
+      test_number: 1,
       component: SpeakingTest1,
     },
   ];
+
+  // Merge database results with test definitions
+  const testsWithStats = speakingTests.map((test) => {
+    const stats = tests.find((t) => t.test_number === test.test_number);
+    return {
+      ...test,
+      attempts: stats?.attempts || 0,
+      bestRating: stats?.best_score || null, // For speaking, score is average self-rating
+    };
+  });
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
@@ -42,7 +54,7 @@ const SpeakingTests = () => {
   };
 
   const handleStartTest = (testId) => {
-    const test = speakingTests.find((t) => t.id === testId);
+    const test = testsWithStats.find((t) => t.id === testId);
     if (test && test.component) {
       setActiveTest(test);
     } else {
@@ -52,14 +64,12 @@ const SpeakingTests = () => {
 
   const handleTestComplete = (results) => {
     console.log("Test completed:", results);
-    // You can save to database here later
   };
 
   const handleExitTest = () => {
     setActiveTest(null);
   };
 
-  // If a test is active, render the test component
   if (activeTest) {
     const TestComponent = activeTest.component;
     return (
@@ -81,10 +91,9 @@ const SpeakingTests = () => {
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          IELTS Speaking Tests 🎤
+          IELTS Speaking Tests
         </h2>
         <p className="text-gray-600">
           Luyện tập kỹ năng nói với các bài test theo chuẩn IELTS. Mỗi bài test
@@ -92,7 +101,6 @@ const SpeakingTests = () => {
         </p>
       </div>
 
-      {/* Info Banner */}
       <div className="bg-orange-50 border-l-4 border-orange-500 p-4 mb-8">
         <div className="flex items-start gap-3">
           <MessageSquare className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
@@ -110,7 +118,6 @@ const SpeakingTests = () => {
         </div>
       </div>
 
-      {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
@@ -134,13 +141,13 @@ const SpeakingTests = () => {
               <Award className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Best Score</p>
+              <p className="text-sm font-medium text-gray-600">Avg Rating</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {Math.max(
-                  ...speakingTests
-                    .filter((t) => t.bestScore)
-                    .map((t) => t.bestScore)
-                ) || "N/A"}
+                {loading
+                  ? "..."
+                  : averageScore
+                  ? `${averageScore.toFixed(1)}/5`
+                  : "N/A"}
               </p>
             </div>
           </div>
@@ -156,16 +163,15 @@ const SpeakingTests = () => {
                 Tests Completed
               </p>
               <p className="text-2xl font-semibold text-gray-900">
-                {speakingTests.filter((t) => t.attempts > 0).length}
+                {loading ? "..." : totalCompleted}
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tests Grid */}
       <div className="space-y-6">
-        {speakingTests.map((test) => (
+        {testsWithStats.map((test) => (
           <div
             key={test.id}
             className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6"
@@ -183,9 +189,9 @@ const SpeakingTests = () => {
                   >
                     {test.difficulty}
                   </span>
-                  {test.bestScore && (
+                  {test.bestRating && (
                     <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      Best: {test.bestScore}
+                      Best: {test.bestRating.toFixed(1)}/5
                     </span>
                   )}
                 </div>

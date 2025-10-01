@@ -1,4 +1,3 @@
-// src/components/ielts/ListeningTests.js
 import { useState } from "react";
 import {
   Headphones,
@@ -9,9 +8,12 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import ListeningTest1 from "./tests/ListeningTest1.js";
+import { useTestResults } from "../../hooks/useTestResults.js";
 
 const ListeningTests = () => {
   const [activeTest, setActiveTest] = useState(null);
+  const { tests, totalCompleted, averageBand, loading } =
+    useTestResults("listening");
 
   const listeningTests = [
     {
@@ -24,11 +26,22 @@ const ListeningTests = () => {
       questions: 40,
       audioLength: "25 min",
       topics: ["Education", "Campus Life", "Academic"],
-      bestScore: null,
-      attempts: 0,
+      test_number: 1,
       component: ListeningTest1,
     },
   ];
+
+  // Merge database results with test definitions
+  const testsWithStats = listeningTests.map((test) => {
+    const stats = tests.find((t) => t.test_number === test.test_number);
+    return {
+      ...test,
+      attempts: stats?.attempts || 0,
+      bestScore: stats?.best_band || null,
+      bestRawScore: stats?.best_score || null,
+      timeTaken: stats?.time_taken || null,
+    };
+  });
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
@@ -44,7 +57,7 @@ const ListeningTests = () => {
   };
 
   const handleStartTest = (testId) => {
-    const test = listeningTests.find((t) => t.id === testId);
+    const test = testsWithStats.find((t) => t.id === testId);
     if (test && test.component) {
       setActiveTest(test);
     } else {
@@ -58,6 +71,13 @@ const ListeningTests = () => {
 
   const handleExitTest = () => {
     setActiveTest(null);
+  };
+
+  const formatTime = (seconds) => {
+    if (!seconds) return null;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   if (activeTest) {
@@ -83,7 +103,7 @@ const ListeningTests = () => {
     <div>
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          IELTS Listening Tests 🎧
+          IELTS Listening Tests
         </h2>
         <p className="text-gray-600">
           Luyện tập kỹ năng nghe với các bài test theo chuẩn IELTS. Mỗi bài test
@@ -114,13 +134,9 @@ const ListeningTests = () => {
               <Award className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Average Score</p>
+              <p className="text-sm font-medium text-gray-600">Average Band</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {Math.max(
-                  ...listeningTests
-                    .filter((t) => t.bestScore)
-                    .map((t) => t.bestScore)
-                ) || "N/A"}
+                {loading ? "..." : averageBand || "N/A"}
               </p>
             </div>
           </div>
@@ -136,7 +152,7 @@ const ListeningTests = () => {
                 Tests Completed
               </p>
               <p className="text-2xl font-semibold text-gray-900">
-                {listeningTests.filter((t) => t.attempts > 0).length}
+                {loading ? "..." : totalCompleted}
               </p>
             </div>
           </div>
@@ -144,7 +160,7 @@ const ListeningTests = () => {
       </div>
 
       <div className="space-y-6">
-        {listeningTests.map((test) => (
+        {testsWithStats.map((test) => (
           <div
             key={test.id}
             className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6"
@@ -164,7 +180,7 @@ const ListeningTests = () => {
                   </span>
                   {test.bestScore && (
                     <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      Best: {test.bestScore}
+                      Best: Band {test.bestScore} ({test.bestRawScore}/40)
                     </span>
                   )}
                 </div>
@@ -187,6 +203,12 @@ const ListeningTests = () => {
                   <div className="flex items-center gap-1">
                     <span>{test.questions} câu hỏi</span>
                   </div>
+                  {test.timeTaken && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      <span>Best time: {formatTime(test.timeTaken)}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-2">

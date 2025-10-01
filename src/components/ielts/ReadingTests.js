@@ -2,9 +2,12 @@
 import { useState } from "react";
 import { BookOpen, Clock, Award, Play, ArrowLeft } from "lucide-react";
 import ReadingTest1 from "./tests/ReadingTest1.js";
+import { useTestResults } from "../../hooks/useTestResults";
 
 const ReadingTests = () => {
   const [activeTest, setActiveTest] = useState(null);
+  const { tests, totalCompleted, averageBand, loading } =
+    useTestResults("reading");
 
   const readingTests = [
     {
@@ -16,11 +19,22 @@ const ReadingTests = () => {
       passages: 3,
       questions: 40,
       topics: ["Environment", "Science", "Policy"],
-      bestScore: null,
-      attempts: 0,
+      test_number: 1,
       component: ReadingTest1,
     },
   ];
+
+  // Merge database results with test definitions
+  const testsWithStats = readingTests.map((test) => {
+    const stats = tests.find((t) => t.test_number === test.test_number);
+    return {
+      ...test,
+      attempts: stats?.attempts || 0,
+      bestScore: stats?.best_band || null,
+      bestRawScore: stats?.best_score || null,
+      timeTaken: stats?.time_taken || null,
+    };
+  });
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
@@ -36,7 +50,7 @@ const ReadingTests = () => {
   };
 
   const handleStartTest = (testId) => {
-    const test = readingTests.find((t) => t.id === testId);
+    const test = testsWithStats.find((t) => t.id === testId);
     if (test && test.component) {
       setActiveTest(test);
     } else {
@@ -52,7 +66,13 @@ const ReadingTests = () => {
     setActiveTest(null);
   };
 
-  // 🔑 Same solution as ListeningTests.js
+  const formatTime = (seconds) => {
+    if (!seconds) return null;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
   if (activeTest) {
     const TestComponent = activeTest.component;
     return (
@@ -74,10 +94,9 @@ const ReadingTests = () => {
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          IELTS Reading Tests 📖
+          IELTS Reading Tests
         </h2>
         <p className="text-gray-600">
           Luyện tập kỹ năng đọc hiểu với các bài test theo chuẩn IELTS. Mỗi bài
@@ -85,7 +104,6 @@ const ReadingTests = () => {
         </p>
       </div>
 
-      {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
@@ -109,13 +127,9 @@ const ReadingTests = () => {
               <Award className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Best Score</p>
+              <p className="text-sm font-medium text-gray-600">Average Band</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {Math.max(
-                  ...readingTests
-                    .filter((t) => t.bestScore)
-                    .map((t) => t.bestScore)
-                ) || "N/A"}
+                {loading ? "..." : averageBand || "N/A"}
               </p>
             </div>
           </div>
@@ -131,16 +145,15 @@ const ReadingTests = () => {
                 Tests Completed
               </p>
               <p className="text-2xl font-semibold text-gray-900">
-                {readingTests.filter((t) => t.attempts > 0).length}
+                {loading ? "..." : totalCompleted}
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tests Grid */}
       <div className="space-y-6">
-        {readingTests.map((test) => (
+        {testsWithStats.map((test) => (
           <div
             key={test.id}
             className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6"
@@ -160,7 +173,7 @@ const ReadingTests = () => {
                   </span>
                   {test.bestScore && (
                     <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      Best: {test.bestScore}
+                      Best: Band {test.bestScore} ({test.bestRawScore}/40)
                     </span>
                   )}
                 </div>
@@ -179,6 +192,12 @@ const ReadingTests = () => {
                   <div className="flex items-center gap-1">
                     <span>{test.questions} câu hỏi</span>
                   </div>
+                  {test.timeTaken && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      <span>Best time: {formatTime(test.timeTaken)}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-2">

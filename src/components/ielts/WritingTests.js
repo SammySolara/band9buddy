@@ -2,9 +2,12 @@
 import { useState } from "react";
 import { PenTool, Clock, Award, Play, FileText, ArrowLeft } from "lucide-react";
 import WritingTest1 from "./tests/WritingTest1.js";
+import { useTestResults } from "../../hooks/useTestResults";
 
 const WritingTests = () => {
   const [activeTest, setActiveTest] = useState(null);
+  const { tests, totalCompleted, averageScore, loading } =
+    useTestResults("writing");
 
   const writingTests = [
     {
@@ -13,15 +16,25 @@ const WritingTests = () => {
       description: "Essay: Team Sports vs Individual Sports",
       type: "Academic",
       difficulty: "Intermediate",
-      duration: 40, // minutes
+      duration: 40,
       tasks: 1,
       task1Type: "Opinion Essay",
       topics: ["Sports", "Social Skills", "Personal Development"],
-      bestScore: null,
-      attempts: 0,
+      test_number: 1,
       component: WritingTest1,
     },
   ];
+
+  // Merge database results with test definitions
+  const testsWithStats = writingTests.map((test) => {
+    const stats = tests.find((t) => t.test_number === test.test_number);
+    return {
+      ...test,
+      attempts: stats?.attempts || 0,
+      bestWordCount: stats?.best_score || null, // For writing, score is word count
+      timeTaken: stats?.time_taken || null,
+    };
+  });
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
@@ -43,7 +56,7 @@ const WritingTests = () => {
   };
 
   const handleStartTest = (testId) => {
-    const test = writingTests.find((t) => t.id === testId);
+    const test = testsWithStats.find((t) => t.id === testId);
     if (test && test.component) {
       setActiveTest(test);
     } else {
@@ -53,14 +66,19 @@ const WritingTests = () => {
 
   const handleTestComplete = (results) => {
     console.log("Test completed:", results);
-    // You can save to database here later
   };
 
   const handleExitTest = () => {
     setActiveTest(null);
   };
 
-  // If a test is active, render the test component
+  const formatTime = (seconds) => {
+    if (!seconds) return null;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
   if (activeTest) {
     const TestComponent = activeTest.component;
     return (
@@ -82,10 +100,9 @@ const WritingTests = () => {
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          IELTS Writing Tests ✍️
+          IELTS Writing Tests
         </h2>
         <p className="text-gray-600">
           Luyện tập kỹ năng viết với các bài test theo chuẩn IELTS. Mỗi bài test
@@ -93,7 +110,6 @@ const WritingTests = () => {
         </p>
       </div>
 
-      {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
@@ -117,13 +133,13 @@ const WritingTests = () => {
               <Award className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Best Score</p>
+              <p className="text-sm font-medium text-gray-600">Avg Words</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {Math.max(
-                  ...writingTests
-                    .filter((t) => t.bestScore)
-                    .map((t) => t.bestScore)
-                ) || "N/A"}
+                {loading
+                  ? "..."
+                  : averageScore
+                  ? Math.round(averageScore)
+                  : "N/A"}
               </p>
             </div>
           </div>
@@ -149,23 +165,17 @@ const WritingTests = () => {
               <Clock className="h-6 w-6 text-orange-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">
-                General Training
-              </p>
+              <p className="text-sm font-medium text-gray-600">Completed</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {
-                  writingTests.filter((t) => t.type === "General Training")
-                    .length
-                }
+                {loading ? "..." : totalCompleted}
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tests Grid */}
       <div className="space-y-6">
-        {writingTests.map((test) => (
+        {testsWithStats.map((test) => (
           <div
             key={test.id}
             className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6"
@@ -190,9 +200,9 @@ const WritingTests = () => {
                   >
                     {test.difficulty}
                   </span>
-                  {test.bestScore && (
+                  {test.bestWordCount && (
                     <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      Best: {test.bestScore}
+                      Best: {test.bestWordCount} words
                     </span>
                   )}
                 </div>
@@ -213,6 +223,12 @@ const WritingTests = () => {
                   <div className="flex items-center gap-1">
                     <span>{test.task1Type}</span>
                   </div>
+                  {test.timeTaken && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      <span>Best time: {formatTime(test.timeTaken)}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-2">
