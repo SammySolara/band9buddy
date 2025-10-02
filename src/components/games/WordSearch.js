@@ -1,48 +1,3 @@
-<div className="lg:col-span-1">
-  <div className="bg-white rounded-xl shadow-lg p-6">
-    <h3 className="text-lg font-semibold text-gray-900 mb-4">Danh sách từ</h3>
-    <div className="space-y-3">
-      {words.map((wordObj, index) => (
-        <div
-          key={index}
-          className={`p-3 rounded-lg border-2 transition-all ${
-            wordObj.found
-              ? "bg-green-50 border-green-200"
-              : "bg-gray-50 border-gray-200"
-          }`}
-        >
-          <p
-            className={`font-bold mb-1 ${
-              wordObj.found ? "text-green-600 line-through" : "text-gray-900"
-            }`}
-          >
-            {wordObj.word}
-          </p>
-          <p className="text-sm text-gray-600">{wordObj.definition}</p>
-        </div>
-      ))}
-    </div>
-
-    <div className="mt-6 pt-6 border-t border-gray-200">
-      <div className="space-y-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-gray-600">Độ khó:</span>
-          <span className="font-semibold text-gray-900 capitalize">
-            {difficulty === "easy"
-              ? "Dễ"
-              : difficulty === "medium"
-              ? "Trung bình"
-              : "Khó"}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Gợi ý đã dùng:</span>
-          <span className="font-semibold text-gray-900">{hintsUsed}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>; // src/components/games/WordSearch.js
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -462,7 +417,7 @@ const WordSearch = () => {
   // Difficulty selection screen
   if (!gameStarted && selectedSet) {
     return (
-      <div className="max-w-4xl mx-auto p-4">
+      <div className="max-w-4xl mx-auto">
         <button
           onClick={() => setSelectedSet(null)}
           className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-6"
@@ -529,7 +484,7 @@ const WordSearch = () => {
   // Set selection screen
   if (!gameStarted) {
     return (
-      <div className="max-w-4xl mx-auto p-4">
+      <div className="max-w-4xl mx-auto">
         <button
           onClick={() => navigate("/dashboard/games")}
           className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-6"
@@ -549,6 +504,7 @@ const WordSearch = () => {
             <p className="text-gray-600">Tìm kiếm từ vựng trong lưới</p>
           </div>
 
+          {/* Game Rules */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
             <h3 className="font-semibold text-gray-900 mb-3">Cách chơi:</h3>
             <ul className="space-y-2 text-gray-700 text-sm">
@@ -585,6 +541,7 @@ const WordSearch = () => {
             </ul>
           </div>
 
+          {/* Set Selection */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Chọn bộ flashcards:
@@ -634,7 +591,7 @@ const WordSearch = () => {
   // Game completion screen
   if (isComplete) {
     return (
-      <div className="max-w-2xl mx-auto p-4">
+      <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg p-8 text-center">
           <div className="mb-6">
             <Award className="h-16 w-16 text-green-500 mx-auto mb-4" />
@@ -642,6 +599,7 @@ const WordSearch = () => {
             <p className="text-gray-600">Bạn đã tìm hết {words.length} từ!</p>
           </div>
 
+          {/* Stats */}
           <div className="grid grid-cols-3 gap-4 mb-8">
             <div className="bg-green-50 rounded-lg p-4">
               <div className="text-3xl font-bold text-green-600">{score}</div>
@@ -661,6 +619,7 @@ const WordSearch = () => {
             </div>
           </div>
 
+          {/* Found Words */}
           <div className="mb-8 text-left">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Các từ đã tìm:
@@ -678,6 +637,7 @@ const WordSearch = () => {
             </div>
           </div>
 
+          {/* Actions */}
           <div className="flex space-x-4">
             <button
               onClick={handleReset}
@@ -704,7 +664,8 @@ const WordSearch = () => {
 
   // Game screen
   return (
-    <div className="max-w-6xl mx-auto p-4">
+    <div className="max-w-6xl mx-auto">
+      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <button
           onClick={() => {
@@ -719,11 +680,13 @@ const WordSearch = () => {
         </button>
 
         <div className="flex items-center space-x-4">
+          {/* Score */}
           <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow">
             <Trophy className="h-5 w-5 text-green-500" />
             <span className="font-semibold text-gray-900">{score}</span>
           </div>
 
+          {/* Time */}
           <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow">
             <Clock className="h-5 w-5 text-blue-500" />
             <span className="font-semibold text-gray-900">
@@ -731,6 +694,7 @@ const WordSearch = () => {
             </span>
           </div>
 
+          {/* Progress */}
           <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow">
             <span className="font-semibold text-gray-900">
               {foundWords.length}/{words.length}
@@ -740,6 +704,7 @@ const WordSearch = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Word Grid */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div
@@ -780,7 +745,7 @@ const WordSearch = () => {
               </div>
             </div>
 
-            <div className="mt-4 flex gap-2 justify-center">
+            <div className="mt-4 flex gap-2 justify-center flex-wrap">
               {selectedCells.length > 0 && (
                 <>
                   <button
@@ -824,10 +789,11 @@ const WordSearch = () => {
           </div>
         </div>
 
+        {/* Word List */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Word List
+              Danh sách từ
             </h3>
             <div className="space-y-3">
               {words.map((wordObj, index) => (
@@ -853,16 +819,21 @@ const WordSearch = () => {
               ))}
             </div>
 
+            {/* Stats */}
             <div className="mt-6 pt-6 border-t border-gray-200">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Difficulty:</span>
+                  <span className="text-gray-600">Độ khó:</span>
                   <span className="font-semibold text-gray-900 capitalize">
-                    {difficulty}
+                    {difficulty === "easy"
+                      ? "Dễ"
+                      : difficulty === "medium"
+                      ? "Trung bình"
+                      : "Khó"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Hints used:</span>
+                  <span className="text-gray-600">Gợi ý đã dùng:</span>
                   <span className="font-semibold text-gray-900">
                     {hintsUsed}
                   </span>
