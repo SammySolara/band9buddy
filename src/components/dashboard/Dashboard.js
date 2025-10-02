@@ -1,4 +1,5 @@
-// src/components/dashboard/Dashboard.js - Updated as Layout
+// src/components/dashboard/Dashboard.js - Updated with Mobile Responsiveness
+import { useState } from "react";
 import {
   LogOut,
   BookOpen,
@@ -10,6 +11,8 @@ import {
   ArrowLeft,
   Star,
   Languages,
+  Menu,
+  X,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -19,6 +22,7 @@ const Dashboard = ({ children }) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -152,6 +156,7 @@ const Dashboard = ({ children }) => {
       return;
     }
     navigate(feature.path);
+    setMobileMenuOpen(false);
   };
 
   const getPageTitle = () => {
@@ -190,18 +195,18 @@ const Dashboard = ({ children }) => {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
               Xin chào, {user?.user_metadata?.name || "bạn"}! 👋
             </h2>
-            <p className="text-gray-600">
+            <p className="text-sm sm:text-base text-gray-600">
               Sẵn sàng học tiếng Anh hôm nay? Hãy chọn một hoạt động để bắt đầu.
             </p>
           </div>
-          <div className="ml-6 flex-shrink-0">
+          <div className="ml-4 sm:ml-6 flex-shrink-0">
             <img
               src={Logo}
               alt="Band 9 Buddy Logo"
-              className="w-32 h-32 object-contain rounded-lg shadow-md"
+              className="w-20 h-20 sm:w-32 sm:h-32 object-contain rounded-lg shadow-md"
             />
           </div>
         </div>
@@ -210,24 +215,26 @@ const Dashboard = ({ children }) => {
       <div className="mb-8">
         <div
           onClick={handleWordOfDayClick}
-          className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg p-6 cursor-pointer transform hover:scale-105 transition-all duration-300 text-white"
+          className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg p-4 sm:p-6 cursor-pointer transform hover:scale-105 transition-all duration-300 text-white"
         >
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Star className="h-5 w-5" />
-                <span className="text-sm font-medium opacity-90">
+                <Star className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm font-medium opacity-90">
                   Word of the Day
                 </span>
               </div>
-              <h3 className="text-2xl font-bold mb-1">{wordOfTheDay}</h3>
-              <p className="text-sm opacity-80">
+              <h3 className="text-xl sm:text-2xl font-bold mb-1">
+                {wordOfTheDay}
+              </h3>
+              <p className="text-xs sm:text-sm opacity-80">
                 Click to explore this word's meaning, pronunciation, and
                 examples
               </p>
             </div>
             <div className="text-right">
-              <BookOpen className="h-8 w-8 opacity-75" />
+              <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 opacity-75" />
             </div>
           </div>
         </div>
@@ -318,31 +325,38 @@ const Dashboard = ({ children }) => {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
+            {/* Left side */}
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Back button - icon only on mobile */}
               {!isHomePage && (
                 <button
                   onClick={() => navigate(getBackPath())}
                   className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   <ArrowLeft className="h-5 w-5" />
-                  <span>Quay lại</span>
+                  <span className="hidden sm:inline">Quay lại</span>
                 </button>
               )}
 
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Band 9 Buddy
+              {/* Logo/Brand - shorter on mobile */}
+              <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
+                <span className="hidden sm:inline">Band 9 Buddy</span>
+                <span className="sm:hidden">B9B</span>
               </h1>
 
-              {!isHomePage && <span className="text-gray-400">•</span>}
-
+              {/* Page title - hidden on small mobile */}
               {!isHomePage && (
-                <span className="text-lg font-medium text-gray-700">
-                  {getPageTitle()}
-                </span>
+                <>
+                  <span className="hidden md:inline text-gray-400">•</span>
+                  <span className="hidden md:inline text-lg font-medium text-gray-700">
+                    {getPageTitle()}
+                  </span>
+                </>
               )}
             </div>
 
-            <div className="flex items-center space-x-4">
+            {/* Right side - Desktop */}
+            <div className="hidden md:flex items-center space-x-4">
               <div className="flex items-center space-x-2 text-gray-700">
                 <User className="h-5 w-5" />
                 <span className="font-medium">
@@ -362,8 +376,75 @@ const Dashboard = ({ children }) => {
                 <span>Đăng xuất</span>
               </button>
             </div>
+
+            {/* Right side - Mobile (Hamburger) */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-gray-600 hover:text-gray-900"
+            >
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t bg-white">
+            <div className="px-4 py-3 space-y-3">
+              {/* User info */}
+              <div className="flex items-center space-x-3 pb-3 border-b">
+                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                  <User className="h-5 w-5 text-indigo-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate">
+                    {user?.user_metadata?.name || "User"}
+                  </p>
+                  <p className="text-sm text-gray-500 truncate">
+                    {user?.email}
+                  </p>
+                </div>
+              </div>
+
+              {/* Quick navigation */}
+              <div className="space-y-2">
+                {features.map((feature) => {
+                  const IconComponent = feature.icon;
+                  return (
+                    <button
+                      key={feature.id}
+                      onClick={() => handleFeatureClick(feature)}
+                      className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-left"
+                    >
+                      <IconComponent className="h-5 w-5 text-gray-600" />
+                      <span className="text-gray-700">{feature.title}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Actions */}
+              <div className="pt-3 border-t space-y-2">
+                <button className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-left">
+                  <Settings className="h-5 w-5 text-gray-600" />
+                  <span className="text-gray-700">Settings</span>
+                </button>
+
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg bg-red-50 hover:bg-red-100 transition-colors text-left text-red-600"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span className="font-medium">Đăng xuất</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
