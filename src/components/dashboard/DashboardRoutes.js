@@ -12,7 +12,13 @@ import WritingTests from "../ielts/WritingTests";
 import SpeakingTests from "../ielts/SpeakingTests";
 import DictionarySearch from "../dictionary/DictionarySearch";
 import LiveTranslator from "../translator/LiveTranslator";
-import GamesQuizzes from "../games/GamesQuizzes"
+import GamesQuizzes from "../games/GamesQuizzes";
+import MatchingGame from "../games/MatchingGame";
+import QuizGame from "../games/QuizGame";
+import SpellingBee from "../games/SpellingBee";
+import ListeningDictation from "../games/ListeningDictation";
+import WordBuilder from "../games/WordBuilder";
+import WordSearch from "../games/WordSearch"
 
 const ComingSoon = ({ feature }) => {
   return (
@@ -133,7 +139,7 @@ const DashboardRoutes = () => {
         />
 
         <Route
-          path="/ielts/speaking" // ✅ FIXED - Changed from /ielts/listening
+          path="/ielts/speaking"
           element={
             <div className="min-h-screen bg-gray-50">
               <Dashboard>
@@ -144,11 +150,77 @@ const DashboardRoutes = () => {
         />
 
         <Route
-          path="/games" // ✅ FIXED - Changed from /ielts/listening
+          path="/games"
           element={
             <div className="min-h-screen bg-gray-50">
               <Dashboard>
                 <GamesQuizzes />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/games/matching"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <MatchingGame />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/games/quiz"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <QuizGame />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/games/spelling-bee"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <SpellingBee />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/games/listening-dictation"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <ListeningDictation />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/games/word-builder"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <WordBuilder />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/games/word-search"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <WordSearch />
               </Dashboard>
             </div>
           }

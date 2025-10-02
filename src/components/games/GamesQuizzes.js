@@ -20,7 +20,7 @@ const GamesQuizzes = () => {
       description: "Ghép các cặp từ và định nghĩa",
       color: "bg-purple-500",
       path: "/dashboard/games/matching",
-      comingSoon: true,
+      comingSoon: false,
     },
     {
       id: "quiz-game",
@@ -29,7 +29,7 @@ const GamesQuizzes = () => {
       description: "Trả lời các câu hỏi từ vựng",
       color: "bg-blue-500",
       path: "/dashboard/games/quiz",
-      comingSoon: true,
+      comingSoon: false,
     },
     {
       id: "spelling-bee",
@@ -38,7 +38,7 @@ const GamesQuizzes = () => {
       description: "Thử thách đánh vần từ vựng",
       color: "bg-yellow-500",
       path: "/dashboard/games/spelling-bee",
-      comingSoon: true,
+      comingSoon: false,
     },
     {
       id: "listening-dictation",
@@ -47,7 +47,7 @@ const GamesQuizzes = () => {
       description: "Nghe và viết từ chính xác",
       color: "bg-green-500",
       path: "/dashboard/games/listening-dictation",
-      comingSoon: true,
+      comingSoon: false,
     },
     {
       id: "word-builder",
@@ -56,7 +56,7 @@ const GamesQuizzes = () => {
       description: "Xếp chữ cái để tạo thành từ",
       color: "bg-orange-500",
       path: "/dashboard/games/word-builder",
-      comingSoon: true,
+      comingSoon: false,
     },
     {
       id: "word-search",
@@ -65,7 +65,7 @@ const GamesQuizzes = () => {
       description: "Tìm từ ẩn trong bảng chữ",
       color: "bg-pink-500",
       path: "/dashboard/games/word-search",
-      comingSoon: true,
+      comingSoon: false,
     },
   ];
 
