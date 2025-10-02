@@ -682,17 +682,35 @@ const WordSearch = () => {
                       key={`${rowIndex}-${colIndex}`}
                       onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
                       onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
-                      className={`
-                        w-8 h-8 md:w-10 md:h-10 flex items-center justify-center
-                        font-bold text-sm md:text-base rounded transition-all
-                        ${
-                          isCellFound(rowIndex, colIndex)
-                            ? "bg-green-500 text-white"
-                            : isCellSelected(rowIndex, colIndex)
-                            ? "bg-blue-400 text-white"
-                            : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                      onMouseUp={handleMouseUp}
+                      onTouchStart={() => handleMouseDown(rowIndex, colIndex)}
+                      onTouchMove={(e) => {
+                        const touch = e.touches[0];
+                        const target = document.elementFromPoint(
+                          touch.clientX,
+                          touch.clientY
+                        );
+                        if (target?.dataset?.row && target?.dataset?.col) {
+                          handleMouseEnter(
+                            parseInt(target.dataset.row),
+                            parseInt(target.dataset.col)
+                          );
                         }
-                      `}
+                      }}
+                      onTouchEnd={handleMouseUp}
+                      data-row={rowIndex}
+                      data-col={colIndex}
+                      className={`
+    w-8 h-8 md:w-10 md:h-10 flex items-center justify-center
+    font-bold text-sm md:text-base rounded transition-all
+    ${
+      isCellFound(rowIndex, colIndex)
+        ? "bg-green-500 text-white"
+        : isCellSelected(rowIndex, colIndex)
+        ? "bg-blue-400 text-white"
+        : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+    }
+  `}
                       style={{ userSelect: "none" }}
                     >
                       {cell.letter.charAt(0)}
