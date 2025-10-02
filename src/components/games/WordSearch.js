@@ -711,7 +711,11 @@ const WordSearch = () => {
         : "bg-gray-100 hover:bg-gray-200 text-gray-700"
     }
   `}
-                      style={{ userSelect: "none" }}
+                      style={{
+                        userSelect: "none",
+                        width: `calc((90vw - ${gridSize * 2}px) / ${gridSize})`,
+                        maxWidth: "40px",
+                      }}
                     >
                       {cell.letter.charAt(0)}
                     </button>
