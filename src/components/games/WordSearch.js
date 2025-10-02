@@ -1,3 +1,4 @@
+// src/components/games/WordSearch.js
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -8,8 +9,6 @@ import {
   Search,
   Clock,
   Eye,
-  Check,
-  X,
 } from "lucide-react";
 import { useFlashcards } from "../../contexts/FlashcardContext";
 
@@ -180,10 +179,15 @@ const WordSearch = () => {
 
   // Generate word search grid
   const generateGrid = (selectedWords, size, allowedDirections) => {
+    // A temporary grid used ONLY for placing words and checking collisions.
     const gridForPlacement = createEmptyGrid(size);
     const finalPositions = {};
+    // A map to store the final state of cells that are part of a word.
+    // Key: "row-col", Value: { letter, isPartOfWord, wordId }
     const letterMap = new Map();
 
+    // Step 1: Try to place words and record their letter positions in our map.
+    // The `placeWord` function will modify `gridForPlacement` as it works.
     for (const wordObj of selectedWords) {
       const word = (wordObj.front || wordObj.front_text).toUpperCase();
       const positions = placeWord(
@@ -195,6 +199,7 @@ const WordSearch = () => {
 
       if (positions) {
         finalPositions[word] = positions;
+        // Record each letter of the successfully placed word in our map.
         positions.forEach((pos, i) => {
           const key = `${pos.x}-${pos.y}`;
           letterMap.set(key, {
@@ -206,12 +211,16 @@ const WordSearch = () => {
       }
     }
 
+    // Step 2: Build the final grid from scratch, using the map and filling in the rest.
+    // This avoids any weird bugs from the mutation process in Step 1.
     const finalGrid = Array.from({ length: size }, (_, rowIndex) =>
       Array.from({ length: size }, (_, colIndex) => {
         const key = `${rowIndex}-${colIndex}`;
+        // If a letter for this cell was recorded in our map, use it.
         if (letterMap.has(key)) {
           return letterMap.get(key);
         }
+        // Otherwise, this cell is empty, so fill it with a random letter.
         return {
           letter: getRandomLetter(),
           isPartOfWord: false,
@@ -259,16 +268,7 @@ const WordSearch = () => {
     setGameStarted(true);
   };
 
-  // Check if two cells are adjacent (including diagonals)
-  const areCellsAdjacent = (cell1, cell2) => {
-    return (
-      Math.abs(cell1.row - cell2.row) <= 1 &&
-      Math.abs(cell1.col - cell2.col) <= 1 &&
-      !(cell1.row === cell2.row && cell1.col === cell2.col)
-    );
-  };
-
-  // Cell selection handlers - DRAG functionality
+  // Cell selection handlers
   const handleMouseDown = (row, col) => {
     setIsSelecting(true);
     setSelectedCells([{ row, col }]);
@@ -276,12 +276,14 @@ const WordSearch = () => {
 
   const handleMouseEnter = (row, col) => {
     if (isSelecting) {
+      // Check if cell is adjacent or in line with selection
       const lastCell = selectedCells[selectedCells.length - 1];
       if (
         lastCell &&
         Math.abs(row - lastCell.row) <= 1 &&
         Math.abs(col - lastCell.col) <= 1
       ) {
+        // Don't add if it's already the last cell
         if (
           selectedCells[selectedCells.length - 1].row !== row ||
           selectedCells[selectedCells.length - 1].col !== col
@@ -299,40 +301,6 @@ const WordSearch = () => {
     }
   };
 
-  // TAP/CLICK handler for sequential selection
-  const handleCellClick = (row, col) => {
-    // If currently dragging, ignore clicks
-    if (isSelecting) return;
-
-    const cellIndex = selectedCells.findIndex(
-      (cell) => cell.row === row && cell.col === col
-    );
-
-    // If clicking the last selected cell again, submit the word
-    if (cellIndex === selectedCells.length - 1 && selectedCells.length > 0) {
-      checkSelectedWord();
-      return;
-    }
-
-    // If cell is already selected (but not last), remove it and all cells after it
-    if (cellIndex !== -1) {
-      setSelectedCells(selectedCells.slice(0, cellIndex + 1));
-      return;
-    }
-
-    // If this is the first cell, start new selection
-    if (selectedCells.length === 0) {
-      setSelectedCells([{ row, col }]);
-      return;
-    }
-
-    // Check if cell is adjacent to the last selected cell
-    const lastCell = selectedCells[selectedCells.length - 1];
-    if (areCellsAdjacent(lastCell, { row, col })) {
-      setSelectedCells([...selectedCells, { row, col }]);
-    }
-  };
-
   // Check if selected cells form a word
   const checkSelectedWord = () => {
     if (selectedCells.length < 1) {
@@ -346,13 +314,16 @@ const WordSearch = () => {
 
     const reversedWord = selectedWord.split("").reverse().join("");
 
+    // Check if it matches any unfound word
     const matchedWord = words.find(
       (w) => !w.found && (w.word === selectedWord || w.word === reversedWord)
     );
 
     if (matchedWord) {
+      // Mark word as found
       setFoundWords([...foundWords, matchedWord.word]);
 
+      // Calculate score based on word length and time
       const basePoints = matchedWord.word.length * 10;
       const timeBonus = Math.max(0, 100 - timeElapsed);
       const hintPenalty = hintsUsed * 20;
@@ -360,6 +331,7 @@ const WordSearch = () => {
 
       setScore((prev) => prev + Math.max(points, 10));
 
+      // Update words array
       setWords(
         words.map((w) =>
           w.word === matchedWord.word ? { ...w, found: true } : w
@@ -367,11 +339,6 @@ const WordSearch = () => {
       );
     }
 
-    setSelectedCells([]);
-  };
-
-  // Clear current selection
-  const clearSelection = () => {
     setSelectedCells([]);
   };
 
@@ -390,6 +357,7 @@ const WordSearch = () => {
       setHintsUsed((prev) => prev + 1);
       setScore((prev) => Math.max(0, prev - 20));
 
+      // Clear hint after 2 seconds
       setTimeout(() => {
         setSelectedCells([]);
       }, 2000);
@@ -514,28 +482,18 @@ const WordSearch = () => {
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-2">2.</span>
-                <span>
-                  <strong>Kéo:</strong> Kéo chuột từ chữ cái đầu đến cuối để
-                  chọn từ
-                </span>
+                <span>Kéo chuột từ chữ cái đầu đến cuối để chọn từ</span>
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-2">3.</span>
-                <span>
-                  <strong>Chạm:</strong> Chạm các chữ cái theo thứ tự, chạm lần
-                  2 vào chữ cuối để gửi
-                </span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-600 mr-2">4.</span>
                 <span>Từ có thể nằm ngang, dọc, chéo hoặc ngược lại</span>
               </li>
               <li className="flex items-start">
-                <span className="text-green-600 mr-2">5.</span>
+                <span className="text-green-600 mr-2">4.</span>
                 <span>Dùng gợi ý để hiện chữ cái đầu (-20 điểm)</span>
               </li>
               <li className="flex items-start">
-                <span className="text-green-600 mr-2">6.</span>
+                <span className="text-green-600 mr-2">5.</span>
                 <span>Hoàn thành nhanh để được điểm thưởng</span>
               </li>
             </ul>
@@ -724,7 +682,6 @@ const WordSearch = () => {
                       key={`${rowIndex}-${colIndex}`}
                       onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
                       onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
-                      onClick={() => handleCellClick(rowIndex, colIndex)}
                       className={`
                         w-8 h-8 md:w-10 md:h-10 flex items-center justify-center
                         font-bold text-sm md:text-base rounded transition-all
@@ -732,7 +689,7 @@ const WordSearch = () => {
                           isCellFound(rowIndex, colIndex)
                             ? "bg-green-500 text-white"
                             : isCellSelected(rowIndex, colIndex)
-                            ? "bg-blue-400 text-white ring-2 ring-blue-600"
+                            ? "bg-blue-400 text-white"
                             : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                         }
                       `}
@@ -745,46 +702,15 @@ const WordSearch = () => {
               </div>
             </div>
 
-            <div className="mt-4 flex gap-2 justify-center flex-wrap">
-              {selectedCells.length > 0 && (
-                <>
-                  <button
-                    onClick={checkSelectedWord}
-                    className="flex items-center justify-center space-x-2 bg-green-500 hover:bg-green-600 text-white py-2 px-6 rounded-lg transition-colors"
-                  >
-                    <Check className="h-5 w-5" />
-                    <span>Gửi từ</span>
-                  </button>
-                  <button
-                    onClick={clearSelection}
-                    className="flex items-center justify-center space-x-2 bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded-lg transition-colors"
-                  >
-                    <X className="h-5 w-5" />
-                    <span>Xóa</span>
-                  </button>
-                </>
-              )}
+            <div className="mt-4 text-center">
               <button
                 onClick={useHint}
                 disabled={words.filter((w) => !w.found).length === 0}
-                className="flex items-center justify-center space-x-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-300 text-white py-2 px-6 rounded-lg transition-colors"
+                className="flex items-center justify-center space-x-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-300 text-white py-2 px-6 rounded-lg transition-colors mx-auto"
               >
                 <Eye className="h-5 w-5" />
                 <span>Gợi ý (-20đ)</span>
               </button>
-            </div>
-
-            <div className="mt-4 text-center text-sm text-gray-600">
-              {selectedCells.length > 0 && (
-                <p>
-                  Đã chọn:{" "}
-                  <span className="font-mono font-bold">
-                    {selectedCells
-                      .map((cell) => grid[cell.row][cell.col].letter)
-                      .join("")}
-                  </span>
-                </p>
-              )}
             </div>
           </div>
         </div>
