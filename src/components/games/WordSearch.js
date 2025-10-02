@@ -1,6 +1,5 @@
 // src/components/games/WordSearch.js
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Trophy,
@@ -9,12 +8,39 @@ import {
   Search,
   Clock,
   Eye,
+  Check,
+  X,
 } from "lucide-react";
-import { useFlashcards } from "../../contexts/FlashcardContext";
 
 const WordSearch = () => {
-  const navigate = useNavigate();
-  const { sets } = useFlashcards();
+  // Mock sets data - replace with your actual context
+  const sets = [
+    {
+      id: 1,
+      title: "Basic Vocabulary",
+      description: "Common English words",
+      cards: [
+        { front: "HELLO", back: "A greeting" },
+        { front: "WORLD", back: "The earth" },
+        { front: "REACT", back: "A JavaScript library" },
+        { front: "CODE", back: "Programming instructions" },
+        { front: "STUDY", back: "To learn" },
+        { front: "GAME", back: "Entertainment activity" },
+        { front: "WORD", back: "A unit of language" },
+      ],
+    },
+    {
+      id: 2,
+      title: "Science Terms",
+      description: "Scientific vocabulary",
+      cards: [
+        { front: "ATOM", back: "Basic unit of matter" },
+        { front: "CELL", back: "Basic unit of life" },
+        { front: "ENERGY", back: "Capacity to do work" },
+        { front: "FORCE", back: "Push or pull" },
+      ],
+    },
+  ];
 
   // Game states
   const [selectedSet, setSelectedSet] = useState(null);
@@ -179,15 +205,10 @@ const WordSearch = () => {
 
   // Generate word search grid
   const generateGrid = (selectedWords, size, allowedDirections) => {
-    // A temporary grid used ONLY for placing words and checking collisions.
     const gridForPlacement = createEmptyGrid(size);
     const finalPositions = {};
-    // A map to store the final state of cells that are part of a word.
-    // Key: "row-col", Value: { letter, isPartOfWord, wordId }
     const letterMap = new Map();
 
-    // Step 1: Try to place words and record their letter positions in our map.
-    // The `placeWord` function will modify `gridForPlacement` as it works.
     for (const wordObj of selectedWords) {
       const word = (wordObj.front || wordObj.front_text).toUpperCase();
       const positions = placeWord(
@@ -199,7 +220,6 @@ const WordSearch = () => {
 
       if (positions) {
         finalPositions[word] = positions;
-        // Record each letter of the successfully placed word in our map.
         positions.forEach((pos, i) => {
           const key = `${pos.x}-${pos.y}`;
           letterMap.set(key, {
@@ -211,16 +231,12 @@ const WordSearch = () => {
       }
     }
 
-    // Step 2: Build the final grid from scratch, using the map and filling in the rest.
-    // This avoids any weird bugs from the mutation process in Step 1.
     const finalGrid = Array.from({ length: size }, (_, rowIndex) =>
       Array.from({ length: size }, (_, colIndex) => {
         const key = `${rowIndex}-${colIndex}`;
-        // If a letter for this cell was recorded in our map, use it.
         if (letterMap.has(key)) {
           return letterMap.get(key);
         }
-        // Otherwise, this cell is empty, so fill it with a random letter.
         return {
           letter: getRandomLetter(),
           isPartOfWord: false,
@@ -268,7 +284,16 @@ const WordSearch = () => {
     setGameStarted(true);
   };
 
-  // Cell selection handlers
+  // Check if two cells are adjacent (including diagonals)
+  const areCellsAdjacent = (cell1, cell2) => {
+    return (
+      Math.abs(cell1.row - cell2.row) <= 1 &&
+      Math.abs(cell1.col - cell2.col) <= 1 &&
+      !(cell1.row === cell2.row && cell1.col === cell2.col)
+    );
+  };
+
+  // Cell selection handlers - DRAG functionality
   const handleMouseDown = (row, col) => {
     setIsSelecting(true);
     setSelectedCells([{ row, col }]);
@@ -276,14 +301,12 @@ const WordSearch = () => {
 
   const handleMouseEnter = (row, col) => {
     if (isSelecting) {
-      // Check if cell is adjacent or in line with selection
       const lastCell = selectedCells[selectedCells.length - 1];
       if (
         lastCell &&
         Math.abs(row - lastCell.row) <= 1 &&
         Math.abs(col - lastCell.col) <= 1
       ) {
-        // Don't add if it's already the last cell
         if (
           selectedCells[selectedCells.length - 1].row !== row ||
           selectedCells[selectedCells.length - 1].col !== col
@@ -301,6 +324,40 @@ const WordSearch = () => {
     }
   };
 
+  // TAP/CLICK handler for sequential selection
+  const handleCellClick = (row, col) => {
+    // If currently dragging, ignore clicks
+    if (isSelecting) return;
+
+    const cellIndex = selectedCells.findIndex(
+      (cell) => cell.row === row && cell.col === col
+    );
+
+    // If clicking the last selected cell again, submit the word
+    if (cellIndex === selectedCells.length - 1 && selectedCells.length > 0) {
+      checkSelectedWord();
+      return;
+    }
+
+    // If cell is already selected (but not last), remove it and all cells after it
+    if (cellIndex !== -1) {
+      setSelectedCells(selectedCells.slice(0, cellIndex + 1));
+      return;
+    }
+
+    // If this is the first cell, start new selection
+    if (selectedCells.length === 0) {
+      setSelectedCells([{ row, col }]);
+      return;
+    }
+
+    // Check if cell is adjacent to the last selected cell
+    const lastCell = selectedCells[selectedCells.length - 1];
+    if (areCellsAdjacent(lastCell, { row, col })) {
+      setSelectedCells([...selectedCells, { row, col }]);
+    }
+  };
+
   // Check if selected cells form a word
   const checkSelectedWord = () => {
     if (selectedCells.length < 1) {
@@ -314,16 +371,13 @@ const WordSearch = () => {
 
     const reversedWord = selectedWord.split("").reverse().join("");
 
-    // Check if it matches any unfound word
     const matchedWord = words.find(
       (w) => !w.found && (w.word === selectedWord || w.word === reversedWord)
     );
 
     if (matchedWord) {
-      // Mark word as found
       setFoundWords([...foundWords, matchedWord.word]);
 
-      // Calculate score based on word length and time
       const basePoints = matchedWord.word.length * 10;
       const timeBonus = Math.max(0, 100 - timeElapsed);
       const hintPenalty = hintsUsed * 20;
@@ -331,7 +385,6 @@ const WordSearch = () => {
 
       setScore((prev) => prev + Math.max(points, 10));
 
-      // Update words array
       setWords(
         words.map((w) =>
           w.word === matchedWord.word ? { ...w, found: true } : w
@@ -339,6 +392,11 @@ const WordSearch = () => {
       );
     }
 
+    setSelectedCells([]);
+  };
+
+  // Clear current selection
+  const clearSelection = () => {
     setSelectedCells([]);
   };
 
@@ -357,7 +415,6 @@ const WordSearch = () => {
       setHintsUsed((prev) => prev + 1);
       setScore((prev) => Math.max(0, prev - 20));
 
-      // Clear hint after 2 seconds
       setTimeout(() => {
         setSelectedCells([]);
       }, 2000);
@@ -385,21 +442,21 @@ const WordSearch = () => {
   // Difficulty selection screen
   if (!gameStarted && selectedSet) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto p-4">
         <button
           onClick={() => setSelectedSet(null)}
           className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-6"
         >
           <ArrowLeft className="h-5 w-5" />
-          <span>Quay lại</span>
+          <span>Back</span>
         </button>
 
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Chọn độ khó
+              Choose Difficulty
             </h2>
-            <p className="text-gray-600">Bộ: {selectedSet.title}</p>
+            <p className="text-gray-600">Set: {selectedSet.title}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -408,11 +465,11 @@ const WordSearch = () => {
               className="bg-green-50 border-2 border-green-200 hover:border-green-500 rounded-xl p-6 transition-all hover:shadow-lg"
             >
               <div className="text-4xl mb-3">😊</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Dễ</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Easy</h3>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>Lưới 10×10</li>
-                <li>3 từ</li>
-                <li>Ngang & Dọc</li>
+                <li>10×10 Grid</li>
+                <li>3 words</li>
+                <li>Horizontal & Vertical</li>
               </ul>
             </button>
 
@@ -421,13 +478,11 @@ const WordSearch = () => {
               className="bg-yellow-50 border-2 border-yellow-200 hover:border-yellow-500 rounded-xl p-6 transition-all hover:shadow-lg"
             >
               <div className="text-4xl mb-3">🤔</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                Trung bình
-              </h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Medium</h3>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>Lưới 12×12</li>
-                <li>5 từ</li>
-                <li>Ngang, Dọc & Chéo</li>
+                <li>12×12 Grid</li>
+                <li>5 words</li>
+                <li>Horizontal, Vertical & Diagonal</li>
               </ul>
             </button>
 
@@ -436,11 +491,11 @@ const WordSearch = () => {
               className="bg-red-50 border-2 border-red-200 hover:border-red-500 rounded-xl p-6 transition-all hover:shadow-lg"
             >
               <div className="text-4xl mb-3">😤</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Khó</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Hard</h3>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>Lưới 15×15</li>
-                <li>7 từ</li>
-                <li>Tất cả hướng</li>
+                <li>15×15 Grid</li>
+                <li>7 words</li>
+                <li>All directions</li>
               </ul>
             </button>
           </div>
@@ -452,15 +507,7 @@ const WordSearch = () => {
   // Set selection screen
   if (!gameStarted) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <button
-          onClick={() => navigate("/dashboard/games")}
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-6"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span>Quay lại</span>
-        </button>
-
+      <div className="max-w-4xl mx-auto p-4">
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500 rounded-full mb-4">
@@ -469,53 +516,57 @@ const WordSearch = () => {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Word Search
             </h1>
-            <p className="text-gray-600">Tìm kiếm từ vựng trong lưới</p>
+            <p className="text-gray-600">Find hidden words in the grid</p>
           </div>
 
-          {/* Game Rules */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
-            <h3 className="font-semibold text-gray-900 mb-3">Cách chơi:</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">How to play:</h3>
             <ul className="space-y-2 text-gray-700 text-sm">
               <li className="flex items-start">
                 <span className="text-green-600 mr-2">1.</span>
-                <span>Tìm các từ ẩn trong lưới chữ cái</span>
+                <span>Find hidden words in the letter grid</span>
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-2">2.</span>
-                <span>Kéo chuột từ chữ cái đầu đến cuối để chọn từ</span>
+                <span>
+                  <strong>Drag:</strong> Click and drag from first to last
+                  letter
+                </span>
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-2">3.</span>
-                <span>Từ có thể nằm ngang, dọc, chéo hoặc ngược lại</span>
+                <span>
+                  <strong>Tap:</strong> Tap letters in sequence, tap last letter
+                  again to submit
+                </span>
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-2">4.</span>
-                <span>Dùng gợi ý để hiện chữ cái đầu (-20 điểm)</span>
+                <span>
+                  Words can be horizontal, vertical, diagonal or reversed
+                </span>
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-2">5.</span>
-                <span>Hoàn thành nhanh để được điểm thưởng</span>
+                <span>Use hints to reveal first letter (-20 points)</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-green-600 mr-2">6.</span>
+                <span>Complete quickly for time bonus!</span>
               </li>
             </ul>
           </div>
 
-          {/* Set Selection */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Chọn bộ flashcards:
+              Choose a flashcard set:
             </h3>
 
             {validSets.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-600 mb-4">
-                  Bạn cần có ít nhất một bộ với 3 thẻ trở lên để chơi
+                  You need at least one set with 3+ cards to play
                 </p>
-                <button
-                  onClick={() => navigate("/dashboard/flashcards")}
-                  className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition-colors"
-                >
-                  Tạo flashcards
-                </button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -530,11 +581,11 @@ const WordSearch = () => {
                         {set.title}
                       </h4>
                       <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                        {set.cards.length} thẻ
+                        {set.cards.length} cards
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 line-clamp-2">
-                      {set.description || "Không có mô tả"}
+                      {set.description || "No description"}
                     </p>
                   </button>
                 ))}
@@ -549,38 +600,38 @@ const WordSearch = () => {
   // Game completion screen
   if (isComplete) {
     return (
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto p-4">
         <div className="bg-white rounded-xl shadow-lg p-8 text-center">
           <div className="mb-6">
             <Award className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Xuất sắc!</h2>
-            <p className="text-gray-600">Bạn đã tìm hết {words.length} từ!</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              Excellent!
+            </h2>
+            <p className="text-gray-600">You found all {words.length} words!</p>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-3 gap-4 mb-8">
             <div className="bg-green-50 rounded-lg p-4">
               <div className="text-3xl font-bold text-green-600">{score}</div>
-              <div className="text-sm text-gray-600">Điểm</div>
+              <div className="text-sm text-gray-600">Score</div>
             </div>
             <div className="bg-blue-50 rounded-lg p-4">
               <div className="text-3xl font-bold text-blue-600">
                 {formatTime(timeElapsed)}
               </div>
-              <div className="text-sm text-gray-600">Thời gian</div>
+              <div className="text-sm text-gray-600">Time</div>
             </div>
             <div className="bg-purple-50 rounded-lg p-4">
               <div className="text-3xl font-bold text-purple-600">
                 {hintsUsed}
               </div>
-              <div className="text-sm text-gray-600">Gợi ý</div>
+              <div className="text-sm text-gray-600">Hints</div>
             </div>
           </div>
 
-          {/* Found Words */}
           <div className="mb-8 text-left">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Các từ đã tìm:
+              Words found:
             </h3>
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {words.map((wordObj, index) => (
@@ -595,14 +646,13 @@ const WordSearch = () => {
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex space-x-4">
             <button
               onClick={handleReset}
               className="flex-1 flex items-center justify-center space-x-2 bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-lg transition-colors"
             >
               <RotateCcw className="h-5 w-5" />
-              <span>Chơi lại</span>
+              <span>Play Again</span>
             </button>
             <button
               onClick={() => {
@@ -612,7 +662,7 @@ const WordSearch = () => {
               }}
               className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-lg transition-colors"
             >
-              Chọn bộ khác
+              Choose Different Set
             </button>
           </div>
         </div>
@@ -622,8 +672,7 @@ const WordSearch = () => {
 
   // Game screen
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Header */}
+    <div className="max-w-6xl mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <button
           onClick={() => {
@@ -634,17 +683,15 @@ const WordSearch = () => {
           className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft className="h-5 w-5" />
-          <span>Thoát</span>
+          <span>Exit</span>
         </button>
 
         <div className="flex items-center space-x-4">
-          {/* Score */}
           <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow">
             <Trophy className="h-5 w-5 text-green-500" />
             <span className="font-semibold text-gray-900">{score}</span>
           </div>
 
-          {/* Time */}
           <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow">
             <Clock className="h-5 w-5 text-blue-500" />
             <span className="font-semibold text-gray-900">
@@ -652,7 +699,6 @@ const WordSearch = () => {
             </span>
           </div>
 
-          {/* Progress */}
           <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow">
             <span className="font-semibold text-gray-900">
               {foundWords.length}/{words.length}
@@ -662,7 +708,6 @@ const WordSearch = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Word Grid */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div
@@ -682,6 +727,7 @@ const WordSearch = () => {
                       key={`${rowIndex}-${colIndex}`}
                       onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
                       onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
+                      onClick={() => handleCellClick(rowIndex, colIndex)}
                       className={`
                         w-8 h-8 md:w-10 md:h-10 flex items-center justify-center
                         font-bold text-sm md:text-base rounded transition-all
@@ -689,7 +735,7 @@ const WordSearch = () => {
                           isCellFound(rowIndex, colIndex)
                             ? "bg-green-500 text-white"
                             : isCellSelected(rowIndex, colIndex)
-                            ? "bg-blue-400 text-white"
+                            ? "bg-blue-400 text-white ring-2 ring-blue-600"
                             : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                         }
                       `}
@@ -702,24 +748,54 @@ const WordSearch = () => {
               </div>
             </div>
 
-            <div className="mt-4 text-center">
+            <div className="mt-4 flex gap-2 justify-center">
+              {selectedCells.length > 0 && (
+                <>
+                  <button
+                    onClick={checkSelectedWord}
+                    className="flex items-center justify-center space-x-2 bg-green-500 hover:bg-green-600 text-white py-2 px-6 rounded-lg transition-colors"
+                  >
+                    <Check className="h-5 w-5" />
+                    <span>Submit Word</span>
+                  </button>
+                  <button
+                    onClick={clearSelection}
+                    className="flex items-center justify-center space-x-2 bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded-lg transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                    <span>Clear</span>
+                  </button>
+                </>
+              )}
               <button
                 onClick={useHint}
                 disabled={words.filter((w) => !w.found).length === 0}
-                className="flex items-center justify-center space-x-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-300 text-white py-2 px-6 rounded-lg transition-colors mx-auto"
+                className="flex items-center justify-center space-x-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-300 text-white py-2 px-6 rounded-lg transition-colors"
               >
                 <Eye className="h-5 w-5" />
-                <span>Gợi ý (-20đ)</span>
+                <span>Hint (-20pts)</span>
               </button>
+            </div>
+
+            <div className="mt-4 text-center text-sm text-gray-600">
+              {selectedCells.length > 0 && (
+                <p>
+                  Selected:{" "}
+                  <span className="font-mono font-bold">
+                    {selectedCells
+                      .map((cell) => grid[cell.row][cell.col].letter)
+                      .join("")}
+                  </span>
+                </p>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Word List */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Danh sách từ
+              Word List
             </h3>
             <div className="space-y-3">
               {words.map((wordObj, index) => (
@@ -745,21 +821,16 @@ const WordSearch = () => {
               ))}
             </div>
 
-            {/* Stats */}
             <div className="mt-6 pt-6 border-t border-gray-200">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Độ khó:</span>
+                  <span className="text-gray-600">Difficulty:</span>
                   <span className="font-semibold text-gray-900 capitalize">
-                    {difficulty === "easy"
-                      ? "Dễ"
-                      : difficulty === "medium"
-                      ? "Trung bình"
-                      : "Khó"}
+                    {difficulty}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Gợi ý đã dùng:</span>
+                  <span className="text-gray-600">Hints used:</span>
                   <span className="font-semibold text-gray-900">
                     {hintsUsed}
                   </span>
