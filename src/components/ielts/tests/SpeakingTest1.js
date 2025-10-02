@@ -27,6 +27,8 @@ const SpeakingTest1 = ({ onComplete, onExit }) => {
 
   const recognitionRef = useRef(null);
   const [browserSupported, setBrowserSupported] = useState(true);
+  const lastSpeechTimeRef = useRef(Date.now());
+  const pauseTimeoutRef = useRef(null);
 
   useEffect(() => {
     const SpeechRecognition =
@@ -40,15 +42,80 @@ const SpeakingTest1 = ({ onComplete, onExit }) => {
       recognition.lang = "en-US";
 
       recognition.onresult = (event) => {
+        const now = Date.now();
+        const timeSinceLastSpeech = now - lastSpeechTimeRef.current;
+
         let finalTranscript = "";
+        let hasInterim = false;
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
           if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript + " ";
+            let text = event.results[i][0].transcript.trim();
+
+            // If there was a pause of 100th a second, add period before new text
+            if (timeSinceLastSpeech > 100 && text) {
+              // Check if previous transcript doesn't end with punctuation
+              setTranscript((prev) => {
+                if (prev && !/[.!?,;:]\s*$/.test(prev.trim())) {
+                  return (
+                    prev.trim() +
+                    ". " +
+                    text.charAt(0).toUpperCase() +
+                    text.slice(1) +
+                    " "
+                  );
+                }
+                return (
+                  prev + (text.charAt(0).toUpperCase() + text.slice(1)) + " "
+                );
+              });
+              lastSpeechTimeRef.current = now;
+              return;
+            }
+
+            // Capitalize first letter if needed
+            if (text) {
+              text = text.charAt(0).toUpperCase() + text.slice(1);
+            }
+
+            finalTranscript += text + " ";
+          } else {
+            hasInterim = true;
           }
         }
+
         if (finalTranscript) {
-          setTranscript((prev) => prev + finalTranscript);
+          setTranscript((prev) => {
+            const combined = prev + finalTranscript;
+            // Ensure sentences are properly capitalized after periods
+            return combined.replace(
+              /([.!?])\s+([a-z])/g,
+              (match, punct, letter) => {
+                return punct + " " + letter.toUpperCase();
+              }
+            );
+          });
         }
+
+        // Update last speech time
+        if (hasInterim || finalTranscript) {
+          lastSpeechTimeRef.current = now;
+        }
+
+        // Clear any existing timeout
+        if (pauseTimeoutRef.current) {
+          clearTimeout(pauseTimeoutRef.current);
+        }
+
+        // Set a timeout to add period after pause
+        pauseTimeoutRef.current = setTimeout(() => {
+          setTranscript((prev) => {
+            if (prev && !/[.!?,;:]\s*$/.test(prev.trim())) {
+              return prev.trim() + ". ";
+            }
+            return prev;
+          });
+        }, 1500);
       };
 
       recognition.onerror = (event) => {
@@ -58,6 +125,12 @@ const SpeakingTest1 = ({ onComplete, onExit }) => {
 
       recognitionRef.current = recognition;
     }
+
+    return () => {
+      if (pauseTimeoutRef.current) {
+        clearTimeout(pauseTimeoutRef.current);
+      }
+    };
   }, []);
 
   const SPEAKING_TEST = {
@@ -135,6 +208,7 @@ const SpeakingTest1 = ({ onComplete, onExit }) => {
   const startRecording = () => {
     if (recognitionRef.current && browserSupported) {
       setTranscript("");
+      lastSpeechTimeRef.current = Date.now();
       recognitionRef.current.start();
       setIsRecording(true);
     }
@@ -144,6 +218,20 @@ const SpeakingTest1 = ({ onComplete, onExit }) => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       setIsRecording(false);
+
+      // Clear pause timeout
+      if (pauseTimeoutRef.current) {
+        clearTimeout(pauseTimeoutRef.current);
+      }
+
+      // Add final period if needed
+      setTranscript((prev) => {
+        if (prev && !/[.!?,;:]\s*$/.test(prev.trim())) {
+          return prev.trim() + ".";
+        }
+        return prev;
+      });
+
       if (selectedModel && transcript) {
         calculateAccuracy();
       }
