@@ -671,9 +671,10 @@ const WordSearch = () => {
               onMouseLeave={handleMouseUp}
             >
               <div
-                className="grid gap-1"
+                className="grid"
                 style={{
                   gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
+                  touchAction: "none",
                 }}
               >
                 {grid.map((row, rowIndex) =>
@@ -701,8 +702,9 @@ const WordSearch = () => {
                       data-row={rowIndex}
                       data-col={colIndex}
                       className={`
-    w-8 h-8 md:w-10 md:h-10 flex items-center justify-center
+    aspect-square flex items-center justify-center
     font-bold text-sm md:text-base rounded transition-all
+    m-[1px]   // 👈 replaces gap visually
     ${
       isCellFound(rowIndex, colIndex)
         ? "bg-green-500 text-white"
