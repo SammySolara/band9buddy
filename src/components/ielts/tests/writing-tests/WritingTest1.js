@@ -6,7 +6,7 @@ import {
   MessageSquare,
   AlertCircle,
 } from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../../../contexts/AuthContext";
 
 const TOTAL_TIME = 2400; // 40 minutes in seconds
 

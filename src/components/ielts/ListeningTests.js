@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import {
   Headphones,
   Clock,
@@ -7,29 +7,14 @@ import {
   Volume2,
   ArrowLeft,
 } from "lucide-react";
-import ListeningTest1 from "./tests/ListeningTest1.js";
+import { listeningTests } from "../../data/tests";
 import { useTestResults } from "../../hooks/useTestResults.js";
 
 const ListeningTests = () => {
   const [activeTest, setActiveTest] = useState(null);
+  const [TestComponent, setTestComponent] = useState(null);
   const { tests, totalCompleted, averageBand, loading } =
     useTestResults("listening");
-
-  const listeningTests = [
-    {
-      id: "listening-1",
-      title: "IELTS Listening Test 1",
-      description: "University Campus Tour & Academic Discussion",
-      difficulty: "Intermediate",
-      duration: 30,
-      sections: 4,
-      questions: 40,
-      audioLength: "25 min",
-      topics: ["Education", "Campus Life", "Academic"],
-      test_number: 1,
-      component: ListeningTest1,
-    },
-  ];
 
   // Merge database results with test definitions
   const testsWithStats = listeningTests.map((test) => {
@@ -56,10 +41,18 @@ const ListeningTests = () => {
     }
   };
 
-  const handleStartTest = (testId) => {
+  const handleStartTest = async (testId) => {
     const test = testsWithStats.find((t) => t.id === testId);
-    if (test && test.component) {
-      setActiveTest(test);
+    if (test && test.componentPath) {
+      try {
+        // Dynamically import the component
+        const module = await import(`${test.componentPath}`);
+        setTestComponent(() => module.default);
+        setActiveTest(test);
+      } catch (error) {
+        console.error("Failed to load test component:", error);
+        alert("Test chưa sẵn sàng!");
+      }
     } else {
       alert("Test chưa sẵn sàng!");
     }
@@ -71,6 +64,7 @@ const ListeningTests = () => {
 
   const handleExitTest = () => {
     setActiveTest(null);
+    setTestComponent(null);
   };
 
   const formatTime = (seconds) => {
@@ -80,8 +74,7 @@ const ListeningTests = () => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  if (activeTest) {
-    const TestComponent = activeTest.component;
+  if (activeTest && TestComponent) {
     return (
       <div>
         <button
@@ -91,10 +84,12 @@ const ListeningTests = () => {
           <ArrowLeft className="h-5 w-5" />
           Back to Tests
         </button>
-        <TestComponent
-          onComplete={handleTestComplete}
-          onExit={handleExitTest}
-        />
+        <Suspense fallback={<div>Loading test...</div>}>
+          <TestComponent
+            onComplete={handleTestComplete}
+            onExit={handleExitTest}
+          />
+        </Suspense>
       </div>
     );
   }
@@ -233,7 +228,6 @@ const ListeningTests = () => {
                 <button
                   onClick={() => handleStartTest(test.id)}
                   className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
-                  disabled={!test.component}
                 >
                   <Play className="h-4 w-4" />
                   {test.attempts > 0 ? "Làm lại" : "Bắt đầu"}

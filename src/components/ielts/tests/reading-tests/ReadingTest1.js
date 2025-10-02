@@ -7,7 +7,7 @@ import {
   XCircle,
   ArrowLeft,
 } from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../../../contexts/AuthContext";
 
 const TOTAL_TIME = 3600; // 60 minutes in seconds
 

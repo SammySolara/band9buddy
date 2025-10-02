@@ -1,5 +1,5 @@
 // src/components/ielts/SpeakingTests.js
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import {
   Mic,
   Clock,
@@ -8,27 +8,14 @@ import {
   MessageSquare,
   ArrowLeft,
 } from "lucide-react";
-import SpeakingTest1 from "./tests/SpeakingTest1.js";
+import { speakingTests } from "../../data/tests";
 import { useTestResults } from "../../hooks/useTestResults";
 
 const SpeakingTests = () => {
   const [activeTest, setActiveTest] = useState(null);
+  const [TestComponent, setTestComponent] = useState(null);
   const { tests, totalCompleted, averageScore, loading } =
     useTestResults("speaking");
-
-  const speakingTests = [
-    {
-      id: "speaking-1",
-      title: "IELTS Speaking Test 1",
-      description: "General topics: Home, Hobbies, Role Models",
-      difficulty: "Intermediate",
-      duration: 15,
-      parts: 3,
-      topics: ["Daily Life", "Personal Experience", "Abstract Discussion"],
-      test_number: 1,
-      component: SpeakingTest1,
-    },
-  ];
 
   // Merge database results with test definitions
   const testsWithStats = speakingTests.map((test) => {
@@ -36,7 +23,7 @@ const SpeakingTests = () => {
     return {
       ...test,
       attempts: stats?.attempts || 0,
-      bestRating: stats?.best_score || null, // For speaking, score is average self-rating
+      bestRating: stats?.best_score || null,
     };
   });
 
@@ -53,10 +40,18 @@ const SpeakingTests = () => {
     }
   };
 
-  const handleStartTest = (testId) => {
+  const handleStartTest = async (testId) => {
     const test = testsWithStats.find((t) => t.id === testId);
-    if (test && test.component) {
-      setActiveTest(test);
+    if (test && test.componentPath) {
+      try {
+        // Dynamically import the component
+        const module = await import(`${test.componentPath}`);
+        setTestComponent(() => module.default);
+        setActiveTest(test);
+      } catch (error) {
+        console.error("Failed to load test component:", error);
+        alert("Test chưa sẵn sàng!");
+      }
     } else {
       alert("Test chưa sẵn sàng!");
     }
@@ -68,10 +63,10 @@ const SpeakingTests = () => {
 
   const handleExitTest = () => {
     setActiveTest(null);
+    setTestComponent(null);
   };
 
-  if (activeTest) {
-    const TestComponent = activeTest.component;
+  if (activeTest && TestComponent) {
     return (
       <div>
         <button
@@ -81,10 +76,12 @@ const SpeakingTests = () => {
           <ArrowLeft className="h-5 w-5" />
           Back to Tests
         </button>
-        <TestComponent
-          onComplete={handleTestComplete}
-          onExit={handleExitTest}
-        />
+        <Suspense fallback={<div>Loading test...</div>}>
+          <TestComponent
+            onComplete={handleTestComplete}
+            onExit={handleExitTest}
+          />
+        </Suspense>
       </div>
     );
   }

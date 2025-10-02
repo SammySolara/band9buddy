@@ -1,6 +1,6 @@
 // src/components/ielts/ListeningTest1.js
 import { useState, useRef, useEffect } from "react";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../../../contexts/AuthContext";
 import {
   Play,
   Pause,
@@ -12,12 +12,12 @@ import {
   XCircle, // For incorrect answers
   ArrowLeft, // For back button
 } from "lucide-react";
-import section1audio from "../../../assets/IELTS-Recent-Actual-Test-With-Answers-Practice-Test-01-Section1.mp3";
-import section2audio from "../../../assets/IELTS-Recent-Actual-Test-With-Answers-Practice-Test-01-Section2.mp3";
-import section3audio from "../../../assets/IELTS-Recent-Actual-Test-With-Answers-Practice-Test-01-Section3.mp3";
-import section4audio from "../../../assets/IELTS-Recent-Actual-Test-With-Answers-Practice-Test-01-Section4.mp3";
-import officePlanImage from "../../../assets/IELTS-Practice-Test-01-Section2.jpg";
-import styleGuideImage from "../../../assets/IELTS-Practice-Test-01-Section3.jpg";
+import section1audio from "../../../../assets/IELTS-Recent-Actual-Test-With-Answers-Practice-Test-01-Section1.mp3";
+import section2audio from "../../../../assets/IELTS-Recent-Actual-Test-With-Answers-Practice-Test-01-Section2.mp3";
+import section3audio from "../../../../assets/IELTS-Recent-Actual-Test-With-Answers-Practice-Test-01-Section3.mp3";
+import section4audio from "../../../../assets/IELTS-Recent-Actual-Test-With-Answers-Practice-Test-01-Section4.mp3";
+import officePlanImage from "../../../../assets/IELTS-Practice-Test-01-Section2.jpg";
+import styleGuideImage from "../../../../assets/IELTS-Practice-Test-01-Section3.jpg";
 
 const TOTAL_TIME = 2400; // 40 minutes in seconds
 

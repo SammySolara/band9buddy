@@ -9,7 +9,7 @@ import {
   AlertCircle,
   Star,
 } from "lucide-react";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../../../contexts/AuthContext";
 
 const SpeakingTest1 = ({ onComplete, onExit }) => {
   const { user, session } = useAuth();
