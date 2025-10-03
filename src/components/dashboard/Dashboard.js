@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import SettingsPage from "./SettingsPage"
 import { useNavigate, useLocation } from "react-router-dom";
 import Logo from "../../assets/B9Logo.png";
 
@@ -364,7 +365,10 @@ const Dashboard = ({ children }) => {
                 </span>
               </div>
 
-              <button className="p-2 text-gray-500 hover:text-gray-700 transition-colors">
+              <button
+                onClick={() => navigate("/dashboard/settings")}
+                className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
+              >
                 <Settings className="h-5 w-5" />
               </button>
 

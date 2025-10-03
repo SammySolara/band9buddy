@@ -20,6 +20,7 @@ import SpellingBee from "../games/SpellingBee";
 import ListeningDictation from "../games/ListeningDictation";
 import WordBuilder from "../games/WordBuilder";
 import WordSearch from "../games/WordSearch";
+import SettingsPage from "./SettingsPage";
 
 const ComingSoon = ({ feature }) => {
   return (
@@ -36,198 +37,209 @@ const ComingSoon = ({ feature }) => {
 
 const DashboardRoutes = () => {
   return (
-      <DraftProvider>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
+    <DraftProvider>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
 
-          <Route
-            path="/flashcards"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <FlashcardSets />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/settings"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <SettingsPage />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/flashcards/edit/:setId"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <SetEditorModal />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/flashcards"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <FlashcardSets />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/flashcards/study/:setId"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <StudyMode />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/flashcards/edit/:setId"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <SetEditorModal />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/dictionary"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <DictionarySearch />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/flashcards/study/:setId"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <StudyMode />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/translator"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <LiveTranslator />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/dictionary"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <DictionarySearch />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/ielts"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <IELTSPractice />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/translator"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <LiveTranslator />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/ielts/reading"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <ReadingTests />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/ielts"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <IELTSPractice />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/ielts/listening"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <ListeningTests />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/ielts/reading"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <ReadingTests />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/ielts/writing"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <WritingTests />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/ielts/listening"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <ListeningTests />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/ielts/speaking"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <SpeakingTests />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/ielts/writing"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <WritingTests />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/games"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <GamesQuizzes />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/ielts/speaking"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <SpeakingTests />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/games/matching"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <MatchingGame />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/games"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <GamesQuizzes />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/games/quiz"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <QuizGame />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/games/matching"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <MatchingGame />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/games/spelling-bee"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <SpellingBee />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/games/quiz"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <QuizGame />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/games/listening-dictation"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <ListeningDictation />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/games/spelling-bee"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <SpellingBee />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/games/word-builder"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <WordBuilder />
-                </Dashboard>
-              </div>
-            }
-          />
+        <Route
+          path="/games/listening-dictation"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <ListeningDictation />
+              </Dashboard>
+            </div>
+          }
+        />
 
-          <Route
-            path="/games/word-search"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <Dashboard>
-                  <WordSearch />
-                </Dashboard>
-              </div>
-            }
-          />
-        </Routes>
-      </DraftProvider>
+        <Route
+          path="/games/word-builder"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <WordBuilder />
+              </Dashboard>
+            </div>
+          }
+        />
+
+        <Route
+          path="/games/word-search"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <Dashboard>
+                <WordSearch />
+              </Dashboard>
+            </div>
+          }
+        />
+      </Routes>
+    </DraftProvider>
   );
 };
 
