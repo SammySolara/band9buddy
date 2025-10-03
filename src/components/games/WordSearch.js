@@ -1,4 +1,3 @@
-// src/components/games/WordSearch.js
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -22,7 +21,7 @@ const WordSearch = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [grid, setGrid] = useState([]);
   const [gridSize, setGridSize] = useState(10);
-  const [words, setWords] = useState([]);
+  const [words, setWords] = useState([]); // words actually placed in grid
   const [foundWords, setFoundWords] = useState([]);
   const [selectedCells, setSelectedCells] = useState([]);
   const [isSelecting, setIsSelecting] = useState(false);
@@ -31,6 +30,8 @@ const WordSearch = () => {
   const [hintsUsed, setHintsUsed] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [wordPositions, setWordPositions] = useState({});
+  const [omittedWords, setOmittedWords] = useState([]);
+  const [selectionMode, setSelectionMode] = useState("click"); // 'click' or 'drag'
 
   // Filter sets that have enough cards
   const validSets = sets.filter((set) => set.cards && set.cards.length >= 3);
@@ -160,7 +161,7 @@ const WordSearch = () => {
       }
 
       if (canPlace) {
-        // Place the word
+        // Place the word onto the grid (mutates the provided grid)
         positions.forEach((pos, i) => {
           grid[pos.x][pos.y] = {
             letter: word[i],
@@ -178,49 +179,76 @@ const WordSearch = () => {
   };
 
   // Generate word search grid
-  const generateGrid = (selectedWords, size, allowedDirections) => {
-    // A temporary grid used ONLY for placing words and checking collisions.
+  // Tries to place up to `maxWords` from selectedCards.
+  // Handles slash-variants by trying shorter variants first.
+  const generateGrid = (selectedCards, size, allowedDirections, maxWords) => {
     const gridForPlacement = createEmptyGrid(size);
     const finalPositions = {};
-    // A map to store the final state of cells that are part of a word.
-    // Key: "row-col", Value: { letter, isPartOfWord, wordId }
     const letterMap = new Map();
 
-    // Step 1: Try to place words and record their letter positions in our map.
-    // The `placeWord` function will modify `gridForPlacement` as it works.
-    for (const wordObj of selectedWords) {
-      const word = (wordObj.front || wordObj.front_text).toUpperCase();
-      const positions = placeWord(
-        gridForPlacement,
-        word,
-        size,
-        allowedDirections
-      );
+    const placedWords = []; // { clean, display, definition }
+    const omitted = [];
 
-      if (positions) {
-        finalPositions[word] = positions;
-        // Record each letter of the successfully placed word in our map.
-        positions.forEach((pos, i) => {
-          const key = `${pos.x}-${pos.y}`;
-          letterMap.set(key, {
-            letter: word[i],
-            isPartOfWord: true,
-            wordId: word,
+    for (const card of selectedCards) {
+      if (placedWords.length >= maxWords) break;
+
+      const rawFront = (card.front || card.front_text || "").toUpperCase();
+      if (!rawFront) continue;
+
+      // Split variants by '/' and sort by shortest cleaned length first
+      const variants = rawFront
+        .split("/")
+        .map((v) => v.trim())
+        .filter(Boolean)
+        .sort(
+          (a, b) => a.replace(/\s+/g, "").length - b.replace(/\s+/g, "").length
+        );
+
+      let placed = false;
+
+      for (const variant of variants) {
+        const clean = variant.replace(/\s+/g, "");
+        if (clean.length === 0 || clean.length > size) continue;
+
+        const positions = placeWord(
+          gridForPlacement,
+          clean,
+          size,
+          allowedDirections
+        );
+        if (positions) {
+          finalPositions[clean] = positions;
+          positions.forEach((pos, i) => {
+            const key = `${pos.x}-${pos.y}`;
+            letterMap.set(key, {
+              letter: clean[i],
+              isPartOfWord: true,
+              wordId: clean,
+            });
           });
-        });
+
+          placedWords.push({
+            clean,
+            display: variant,
+            definition: card.back || card.back_text,
+          });
+          placed = true;
+          break;
+        }
+      }
+
+      if (!placed) {
+        omitted.push(rawFront);
       }
     }
 
-    // Step 2: Build the final grid from scratch, using the map and filling in the rest.
-    // This avoids any weird bugs from the mutation process in Step 1.
+    // Build final grid using map
     const finalGrid = Array.from({ length: size }, (_, rowIndex) =>
       Array.from({ length: size }, (_, colIndex) => {
         const key = `${rowIndex}-${colIndex}`;
-        // If a letter for this cell was recorded in our map, use it.
         if (letterMap.has(key)) {
           return letterMap.get(key);
         }
-        // Otherwise, this cell is empty, so fill it with a random letter.
         return {
           letter: getRandomLetter(),
           isPartOfWord: false,
@@ -229,7 +257,7 @@ const WordSearch = () => {
       })
     );
 
-    return { grid: finalGrid, positions: finalPositions };
+    return { grid: finalGrid, positions: finalPositions, placedWords, omitted };
   };
 
   // Start game
@@ -238,23 +266,29 @@ const WordSearch = () => {
     setDifficulty(diff);
 
     const settings = difficultySettings[diff];
-    const shuffledCards = shuffleArray([...set.cards]).slice(
-      0,
-      settings.wordCount
-    );
 
-    const { grid: newGrid, positions } = generateGrid(
+    // Shuffle all cards; we'll try to place up to settings.wordCount
+    const shuffledCards = shuffleArray([...set.cards]);
+
+    const {
+      grid: newGrid,
+      positions,
+      placedWords,
+      omitted,
+    } = generateGrid(
       shuffledCards,
       settings.size,
-      settings.directions
+      settings.directions,
+      settings.wordCount
     );
 
     setGrid(newGrid);
     setGridSize(settings.size);
     setWords(
-      shuffledCards.map((card) => ({
-        word: (card.front || card.front_text).toUpperCase(),
-        definition: card.back || card.back_text,
+      placedWords.map((w) => ({
+        word: w.clean, // grid matching version
+        display: w.display, // shown in list
+        definition: w.definition,
         found: false,
       }))
     );
@@ -266,32 +300,30 @@ const WordSearch = () => {
     setHintsUsed(0);
     setIsComplete(false);
     setGameStarted(true);
+    setOmittedWords(omitted);
   };
 
-  // Cell selection handlers
+  // Cell selection handlers (drag mode)
   const handleMouseDown = (row, col) => {
     setIsSelecting(true);
     setSelectedCells([{ row, col }]);
   };
 
   const handleMouseEnter = (row, col) => {
-    if (isSelecting) {
-      // Check if cell is adjacent or in line with selection
-      const lastCell = selectedCells[selectedCells.length - 1];
+    setSelectedCells((prev) => {
+      if (!isSelecting) return prev;
+      const lastCell = prev[prev.length - 1];
       if (
         lastCell &&
         Math.abs(row - lastCell.row) <= 1 &&
         Math.abs(col - lastCell.col) <= 1
       ) {
-        // Don't add if it's already the last cell
-        if (
-          selectedCells[selectedCells.length - 1].row !== row ||
-          selectedCells[selectedCells.length - 1].col !== col
-        ) {
-          setSelectedCells([...selectedCells, { row, col }]);
+        if (lastCell.row !== row || lastCell.col !== col) {
+          return [...prev, { row, col }];
         }
       }
-    }
+      return prev;
+    });
   };
 
   const handleMouseUp = () => {
@@ -321,7 +353,7 @@ const WordSearch = () => {
 
     if (matchedWord) {
       // Mark word as found
-      setFoundWords([...foundWords, matchedWord.word]);
+      setFoundWords((prev) => [...prev, matchedWord.word]);
 
       // Calculate score based on word length and time
       const basePoints = matchedWord.word.length * 10;
@@ -332,8 +364,8 @@ const WordSearch = () => {
       setScore((prev) => prev + Math.max(points, 10));
 
       // Update words array
-      setWords(
-        words.map((w) =>
+      setWords((prev) =>
+        prev.map((w) =>
           w.word === matchedWord.word ? { ...w, found: true } : w
         )
       );
@@ -482,7 +514,10 @@ const WordSearch = () => {
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-2">2.</span>
-                <span>Kéo chuột từ chữ cái đầu đến cuối để chọn từ</span>
+                <span>
+                  Kéo chuột từ chữ cái đầu đến cuối để chọn từ (hoặc dùng chế độ
+                  click)
+                </span>
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-2">3.</span>
@@ -588,7 +623,9 @@ const WordSearch = () => {
                   key={index}
                   className="p-3 rounded-lg border-2 bg-green-50 border-green-200"
                 >
-                  <p className="font-bold text-gray-900 mb-1">{wordObj.word}</p>
+                  <p className="font-bold text-gray-900 mb-1">
+                    {wordObj.display}
+                  </p>
                   <p className="text-sm text-gray-600">{wordObj.definition}</p>
                 </div>
               ))}
@@ -665,6 +702,33 @@ const WordSearch = () => {
         {/* Word Grid */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Chế độ chọn:{" "}
+                <span className="font-semibold">
+                  {selectionMode === "click"
+                    ? "Click → Xác nhận"
+                    : "Kéo để chọn"}
+                </span>
+              </div>
+              <div className="space-x-2">
+                <button
+                  onClick={() =>
+                    setSelectionMode((m) => (m === "click" ? "drag" : "click"))
+                  }
+                  className="px-3 py-1 border rounded-md text-sm"
+                >
+                  Chuyển chế độ
+                </button>
+                <button
+                  onClick={() => setSelectedCells([])}
+                  className="px-3 py-1 border rounded-md text-sm"
+                >
+                  Bỏ chọn
+                </button>
+              </div>
+            </div>
+
             <div
               className="inline-block"
               onMouseUp={handleMouseUp}
@@ -681,30 +745,68 @@ const WordSearch = () => {
                   row.map((cell, colIndex) => (
                     <button
                       key={`${rowIndex}-${colIndex}`}
-                      onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
-                      onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
-                      onMouseUp={handleMouseUp}
-                      onTouchStart={() => handleMouseDown(rowIndex, colIndex)}
-                      onTouchMove={(e) => {
-                        const touch = e.touches[0];
-                        const target = document.elementFromPoint(
-                          touch.clientX,
-                          touch.clientY
-                        );
-                        if (target?.dataset?.row && target?.dataset?.col) {
-                          handleMouseEnter(
-                            parseInt(target.dataset.row),
-                            parseInt(target.dataset.col)
-                          );
+                      onMouseDown={
+                        selectionMode === "drag"
+                          ? () => handleMouseDown(rowIndex, colIndex)
+                          : undefined
+                      }
+                      onMouseEnter={
+                        selectionMode === "drag"
+                          ? () => handleMouseEnter(rowIndex, colIndex)
+                          : undefined
+                      }
+                      onMouseUp={
+                        selectionMode === "drag" ? handleMouseUp : undefined
+                      }
+                      onTouchStart={
+                        selectionMode === "drag"
+                          ? () => handleMouseDown(rowIndex, colIndex)
+                          : undefined
+                      }
+                      onTouchMove={
+                        selectionMode === "drag"
+                          ? (e) => {
+                              const touch = e.touches[0];
+                              const target = document.elementFromPoint(
+                                touch.clientX,
+                                touch.clientY
+                              );
+                              if (
+                                target?.dataset?.row &&
+                                target?.dataset?.col
+                              ) {
+                                handleMouseEnter(
+                                  parseInt(target.dataset.row),
+                                  parseInt(target.dataset.col)
+                                );
+                              }
+                            }
+                          : undefined
+                      }
+                      onTouchEnd={
+                        selectionMode === "drag" ? handleMouseUp : undefined
+                      }
+                      onClick={() => {
+                        if (selectionMode === "click") {
+                          setSelectedCells((prev) => {
+                            const exists = prev.some(
+                              (c) => c.row === rowIndex && c.col === colIndex
+                            );
+                            if (exists)
+                              return prev.filter(
+                                (c) =>
+                                  !(c.row === rowIndex && c.col === colIndex)
+                              );
+                            return [...prev, { row: rowIndex, col: colIndex }];
+                          });
                         }
                       }}
-                      onTouchEnd={handleMouseUp}
                       data-row={rowIndex}
                       data-col={colIndex}
                       className={`
     aspect-square flex items-center justify-center
     font-bold text-sm md:text-base rounded transition-all
-    m-[1px]   // 👈 replaces gap visually
+    m-[1px]
     ${
       isCellFound(rowIndex, colIndex)
         ? "bg-green-500 text-white"
@@ -726,16 +828,55 @@ const WordSearch = () => {
               </div>
             </div>
 
+            {/* Confirm / Clear when using click mode */}
             <div className="mt-4 text-center">
-              <button
-                onClick={useHint}
-                disabled={words.filter((w) => !w.found).length === 0}
-                className="flex items-center justify-center space-x-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-300 text-white py-2 px-6 rounded-lg transition-colors mx-auto"
-              >
-                <Eye className="h-5 w-5" />
-                <span>Gợi ý (-20đ)</span>
-              </button>
+              {selectionMode === "click" && (
+                <div className="flex items-center justify-center space-x-3">
+                  <button
+                    onClick={checkSelectedWord}
+                    disabled={selectedCells.length === 0}
+                    className="flex items-center justify-center space-x-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white py-2 px-6 rounded-lg transition-colors"
+                  >
+                    Xác nhận
+                  </button>
+                  <button
+                    onClick={() => setSelectedCells([])}
+                    className="flex items-center justify-center space-x-2 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-6 rounded-lg transition-colors"
+                  >
+                    Bỏ chọn
+                  </button>
+                  <button
+                    onClick={useHint}
+                    disabled={words.filter((w) => !w.found).length === 0}
+                    className="flex items-center justify-center space-x-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-300 text-white py-2 px-6 rounded-lg transition-colors"
+                  >
+                    <Eye className="h-5 w-5" />
+                    <span>Gợi ý (-20đ)</span>
+                  </button>
+                </div>
+              )}
+
+              {selectionMode === "drag" && (
+                <div className="text-center">
+                  <button
+                    onClick={useHint}
+                    disabled={words.filter((w) => !w.found).length === 0}
+                    className="flex items-center justify-center space-x-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-300 text-white py-2 px-6 rounded-lg transition-colors mx-auto"
+                  >
+                    <Eye className="h-5 w-5" />
+                    <span>Gợi ý (-20đ)</span>
+                  </button>
+                </div>
+              )}
             </div>
+
+            {/* Optional omitted words notice */}
+            {omittedWords.length > 0 && (
+              <div className="mt-4 text-sm text-gray-600">
+                Một số từ đã bị loại vì quá dài hoặc không thể đặt vào lưới:{" "}
+                {omittedWords.join(", ")}
+              </div>
+            )}
           </div>
         </div>
 
@@ -762,12 +903,26 @@ const WordSearch = () => {
                         : "text-gray-900"
                     }`}
                   >
-                    {wordObj.word}
+                    {wordObj.display}
                   </p>
                   <p className="text-sm text-gray-600">{wordObj.definition}</p>
                 </div>
               ))}
             </div>
+
+            {/* Omitted words (if any) */}
+            {omittedWords.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
+                <div className="font-semibold mb-1">Từ bị loại:</div>
+                <div className="space-y-1">
+                  {omittedWords.map((t, i) => (
+                    <div key={i} className="text-xs">
+                      {t}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Stats */}
             <div className="mt-6 pt-6 border-t border-gray-200">

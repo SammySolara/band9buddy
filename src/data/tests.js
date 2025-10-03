@@ -69,5 +69,18 @@ export const listeningTests = [
     test_number: 1,
     componentPath: "./tests/listening-tests/ListeningTest1",
   },
+  {
+    id: "listening-2",
+    title: "IELTS Listening Test 2",
+    description: "Diet Planning, Childcare Centre, Essay Writing & Astronomy",
+    difficulty: "Intermediate",
+    duration: 30,
+    sections: 4,
+    questions: 40,
+    audioLength: "25 min",
+    topics: ["Health", "Education", "Academic Skills", "Science"],
+    test_number: 2,
+    componentPath: "./tests/listening-tests/ListeningTest2",
+  },
 ];
 
