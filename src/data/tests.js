@@ -26,6 +26,19 @@ export const writingTests = [
     test_number: 1,
     componentPath: "./tests/writing-tests/WritingTest1",
   },
+  {
+    id: "writing-2",
+    title: "Academic Writing Test 2",
+    description: "Essay: Urban Life Problems and Solutions",
+    type: "Academic",
+    difficulty: "Intermediate",
+    duration: 40,
+    tasks: 1,
+    task1Type: "Problem-Solution Essay",
+    topics: ["Urban Planning", "Quality of Life", "Government Policy"],
+    test_number: 2,
+    componentPath: "./tests/writing-tests/WritingTest2",
+  },
 ];
 
 export const readingTests = [
