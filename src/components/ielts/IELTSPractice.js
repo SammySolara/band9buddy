@@ -1,9 +1,20 @@
 // src/components/ielts/IELTSPractice.js
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Headphones, PenTool, Mic } from "lucide-react";
+import { useTestResults } from "../../hooks/useTestResults";
 
 const IELTSPractice = () => {
   const navigate = useNavigate();
+
+  // Get stats for all test types
+  const { averageBand: readingBand, loading: readingLoading } =
+    useTestResults("reading");
+  const { averageBand: listeningBand, loading: listeningLoading } =
+    useTestResults("listening");
+  const { averageScore: writingScore, loading: writingLoading } =
+    useTestResults("writing");
+  const { averageScore: speakingScore, loading: speakingLoading } =
+    useTestResults("speaking");
 
   const practiceTypes = [
     {
@@ -43,6 +54,45 @@ const IELTSPractice = () => {
   const handlePracticeClick = (practice) => {
     navigate(practice.path);
   };
+
+  const statsData = [
+    {
+      icon: BookOpen,
+      bgColor: "bg-blue-100",
+      iconColor: "text-blue-600",
+      label: "Reading Avg Band",
+      value: readingLoading ? "..." : readingBand || "N/A",
+    },
+    {
+      icon: Headphones,
+      bgColor: "bg-green-100",
+      iconColor: "text-green-600",
+      label: "Listening Avg Band",
+      value: listeningLoading ? "..." : listeningBand || "N/A",
+    },
+    {
+      icon: PenTool,
+      bgColor: "bg-purple-100",
+      iconColor: "text-purple-600",
+      label: "Writing Avg Words",
+      value: writingLoading
+        ? "..."
+        : writingScore
+        ? Math.round(writingScore)
+        : "N/A",
+    },
+    {
+      icon: Mic,
+      bgColor: "bg-orange-100",
+      iconColor: "text-orange-600",
+      label: "Speaking Avg Rating",
+      value: speakingLoading
+        ? "..."
+        : speakingScore
+        ? `${speakingScore.toFixed(1)}/5`
+        : "N/A",
+    },
+  ];
 
   return (
     <div>
@@ -94,61 +144,26 @@ const IELTSPractice = () => {
           Thống kê luyện tập
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <BookOpen className="h-6 w-6 text-blue-600" />
+          {statsData.map((stat, index) => {
+            const IconComponent = stat.icon;
+            return (
+              <div key={index} className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className={`p-2 ${stat.bgColor} rounded-lg`}>
+                    <IconComponent className={`h-6 w-6 ${stat.iconColor}`} />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">
+                      {stat.label}
+                    </p>
+                    <p className="text-2xl font-semibold text-gray-900">
+                      {stat.value}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Reading Tests
-                </p>
-                <p className="text-2xl font-semibold text-gray-900">0</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Headphones className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Listening Tests
-                </p>
-                <p className="text-2xl font-semibold text-gray-900">0</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <PenTool className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Writing Tests
-                </p>
-                <p className="text-2xl font-semibold text-gray-900">0</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Mic className="h-6 w-6 text-orange-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Speaking Tests
-                </p>
-                <p className="text-2xl font-semibold text-gray-900">0</p>
-              </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
     </div>
