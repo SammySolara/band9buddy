@@ -19,6 +19,7 @@ const MatchingGame = () => {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   // Filter sets that have enough cards (minimum 4 cards = 2 pairs)
   const validSets = sets.filter((set) => set.cards && set.cards.length >= 4);
@@ -26,13 +27,13 @@ const MatchingGame = () => {
   // Timer effect
   useEffect(() => {
     let interval;
-    if (gameStarted && !isComplete) {
+    if (gameStarted && !isComplete && !showPreview) {
       interval = setInterval(() => {
         setTimeElapsed((prev) => prev + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [gameStarted, isComplete]);
+  }, [gameStarted, isComplete, showPreview]);
 
   // Format time display
   const formatTime = (seconds) => {
@@ -72,15 +73,22 @@ const MatchingGame = () => {
     const shuffled = gamePairs.sort(() => Math.random() - 0.5);
     setCards(shuffled);
     setGameStarted(true);
+    setShowPreview(true);
     setFlippedCards([]);
     setMatchedPairs([]);
     setMoves(0);
     setTimeElapsed(0);
     setIsComplete(false);
+
+    // Hide preview after 3 seconds
+    setTimeout(() => {
+      setShowPreview(false);
+    }, 3000);
   };
 
   // Handle card click
   const handleCardClick = (cardId) => {
+    if (showPreview) return;
     if (isChecking) return;
     if (flippedCards.includes(cardId)) return;
     if (matchedPairs.some((pair) => pair.includes(cardId))) return;
@@ -131,7 +139,8 @@ const MatchingGame = () => {
     const totalCards = cards.length;
     if (totalCards <= 8) return "grid-cols-4"; // 4 columns for 4 pairs
     if (totalCards <= 12) return "grid-cols-4 md:grid-cols-6"; // 6 columns for 6 pairs
-    return "grid-cols-4 md:grid-cols-6 lg:grid-cols-8"; // 8 columns for 8+ pairs
+    if (totalCards <= 16) return "grid-cols-4 md:grid-cols-4 lg:grid-cols-6"; // 4-6 columns for 8 pairs
+    return "grid-cols-4 md:grid-cols-6"; // 4-6 columns for larger sets
   };
 
   // Calculate score
@@ -368,7 +377,7 @@ const MatchingGame = () => {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <button
           onClick={() => {
             setGameStarted(false);
@@ -381,26 +390,36 @@ const MatchingGame = () => {
           <span>Chọn lại</span>
         </button>
 
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow">
-            <Clock className="h-5 w-5 text-gray-600" />
-            <span className="font-semibold text-gray-900">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center space-x-2 bg-white px-3 py-2 rounded-lg shadow">
+            <Clock className="h-4 w-4 text-gray-600" />
+            <span className="font-semibold text-gray-900 text-sm">
               {formatTime(timeElapsed)}
             </span>
           </div>
-          <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow">
-            <Trophy className="h-5 w-5 text-gray-600" />
-            <span className="font-semibold text-gray-900">{moves} lượt</span>
+          <div className="flex items-center space-x-2 bg-white px-3 py-2 rounded-lg shadow">
+            <Trophy className="h-4 w-4 text-gray-600" />
+            <span className="font-semibold text-gray-900 text-sm">
+              {moves} lượt
+            </span>
           </div>
           <button
             onClick={handleReset}
-            className="flex items-center space-x-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center space-x-2 bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg transition-colors"
           >
-            <RotateCcw className="h-5 w-5" />
-            <span>Làm lại</span>
+            <RotateCcw className="h-4 w-4" />
+            <span className="text-sm">Làm lại</span>
           </button>
         </div>
       </div>
+
+      {/* Preview Banner */}
+      {showPreview && (
+        <div className="bg-purple-500 text-white rounded-lg shadow-lg p-4 mb-6 text-center animate-pulse">
+          <p className="font-semibold">👀 Ghi nhớ vị trí các thẻ!</p>
+          <p className="text-sm mt-1">Trò chơi bắt đầu sau vài giây...</p>
+        </div>
+      )}
 
       {/* Game Title */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
@@ -417,22 +436,23 @@ const MatchingGame = () => {
         {cards.map((card) => {
           const isFlipped = flippedCards.includes(card.id);
           const isMatched = matchedPairs.some((pair) => pair.includes(card.id));
+          const showCard = showPreview || isFlipped || isMatched;
 
           return (
             <button
               key={card.id}
               onClick={() => handleCardClick(card.id)}
-              disabled={isMatched}
+              disabled={isMatched || showPreview}
               className={`aspect-square rounded-lg transition-all duration-300 transform ${
                 isMatched
                   ? "bg-green-500 text-white cursor-default scale-95 opacity-75"
-                  : isFlipped
+                  : showCard
                   ? "bg-purple-500 text-white shadow-lg scale-105"
                   : "bg-white hover:bg-gray-50 shadow hover:shadow-md"
               }`}
             >
               <div className="h-full flex items-center justify-center p-2 md:p-4">
-                {isFlipped || isMatched ? (
+                {showCard ? (
                   <span className="text-xs md:text-sm font-medium text-center line-clamp-3 md:line-clamp-4">
                     {card.content}
                   </span>
