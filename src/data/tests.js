@@ -10,6 +10,17 @@ export const speakingTests = [
     test_number: 1,
     componentPath: "./tests/speaking-tests/SpeakingTest1",
   },
+  {
+    id: "speaking-2",
+    title: "IELTS Speaking Test 2",
+    description: "General topics: Work/Study, Street Markets, Money",
+    difficulty: "Intermediate",
+    duration: 15,
+    parts: 3,
+    topics: ["Work & Education", "Shopping", "Finance"],
+    test_number: 2,
+    componentPath: "./tests/speaking-tests/SpeakingTest2",
+  },
 ];
 
 export const writingTests = [
