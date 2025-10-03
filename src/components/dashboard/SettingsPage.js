@@ -182,7 +182,6 @@ const SettingsPage = () => {
   const tabs = [
     { id: "profile", label: "Thông tin cá nhân", icon: User },
     { id: "security", label: "Bảo mật", icon: Shield },
-    { id: "preferences", label: "Tùy chọn", icon: Bell },
     { id: "danger", label: "Vùng nguy hiểm", icon: AlertCircle },
   ];
 
@@ -401,66 +400,6 @@ const SettingsPage = () => {
                     <span>Cập nhật mật khẩu</span>
                   </>
                 )}
-              </button>
-            </div>
-          )}
-
-          {activeTab === "preferences" && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Thông báo
-                </h3>
-                <div className="space-y-4">
-                  {[
-                    {
-                      key: "emailNotifications",
-                      label: "Thông báo qua email",
-                      desc: "Nhận thông báo về hoạt động tài khoản",
-                    },
-                    {
-                      key: "studyReminders",
-                      label: "Nhắc nhở học tập",
-                      desc: "Nhận nhắc nhở hàng ngày để học tập",
-                    },
-                    {
-                      key: "weeklyProgress",
-                      label: "Báo cáo tiến độ",
-                      desc: "Nhận báo cáo tiến độ hàng tuần",
-                    },
-                  ].map((pref) => (
-                    <label
-                      key={pref.key}
-                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                    >
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {pref.label}
-                        </p>
-                        <p className="text-sm text-gray-600">{pref.desc}</p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={preferences[pref.key]}
-                        onChange={(e) =>
-                          setPreferences((prev) => ({
-                            ...prev,
-                            [pref.key]: e.target.checked,
-                          }))
-                        }
-                        className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
-                      />
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                onClick={() => showMessage("success", "Đã lưu tùy chọn!")}
-                className="flex items-center justify-center space-x-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition-colors"
-              >
-                <Save className="h-5 w-5" />
-                <span>Lưu tùy chọn</span>
               </button>
             </div>
           )}
