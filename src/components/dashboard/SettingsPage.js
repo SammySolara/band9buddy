@@ -58,8 +58,8 @@ const SettingsPage = () => {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      showMessage("error", "Kích thước ảnh phải nhỏ hơn 2MB");
+    if (file.size > 2 * 2048 * 2048) {
+      showMessage("error", "Kích thước ảnh phải nhỏ hơn 4MB");
       return;
     }
 
@@ -269,7 +269,7 @@ const SettingsPage = () => {
                 <div>
                   <h3 className="font-semibold text-gray-900">Ảnh đại diện</h3>
                   <p className="text-sm text-gray-600">
-                    JPG, PNG, GIF. Tối đa 2MB
+                    JPG, PNG, GIF. Tối đa 4MB
                   </p>
                 </div>
               </div>

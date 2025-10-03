@@ -359,7 +359,21 @@ const Dashboard = ({ children }) => {
             {/* Right side - Desktop */}
             <div className="hidden md:flex items-center space-x-4">
               <div className="flex items-center space-x-2 text-gray-700">
-                <User className="h-5 w-5" />
+                {user?.user_metadata?.avatar_url ? (
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt="Profile"
+                    className="h-8 w-8 rounded-full object-cover border-2 border-indigo-200"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                    {(
+                      user?.user_metadata?.name?.[0] ||
+                      user?.email?.[0] ||
+                      "U"
+                    ).toUpperCase()}
+                  </div>
+                )}
                 <span className="font-medium">
                   {user?.user_metadata?.name || user?.email || "User"}
                 </span>
@@ -401,8 +415,22 @@ const Dashboard = ({ children }) => {
             <div className="px-4 py-3 space-y-3">
               {/* User info */}
               <div className="flex items-center space-x-3 pb-3 border-b">
-                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <User className="h-5 w-5 text-indigo-600" />
+                <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                  {user?.user_metadata?.avatar_url ? (
+                    <img
+                      src={user.user_metadata.avatar_url}
+                      alt="Profile"
+                      className="h-8 w-8 rounded-full object-cover border-2 border-indigo-200"
+                    />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                      {(
+                        user?.user_metadata?.name?.[0] ||
+                        user?.email?.[0] ||
+                        "U"
+                      ).toUpperCase()}
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate">
