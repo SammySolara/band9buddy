@@ -10,6 +10,7 @@ const MatchingGame = () => {
 
   // Game states
   const [selectedSet, setSelectedSet] = useState(null);
+  const [difficulty, setDifficulty] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [cards, setCards] = useState([]);
   const [flippedCards, setFlippedCards] = useState([]);
@@ -41,11 +42,12 @@ const MatchingGame = () => {
   };
 
   // Initialize game with selected set
-  const startGame = (set) => {
+  const startGame = (set, pairCount) => {
     setSelectedSet(set);
+    setDifficulty(pairCount);
 
-    // Take up to 8 cards (4 pairs) from the set
-    const selectedCards = set.cards.slice(0, 8);
+    // Take the specified number of cards
+    const selectedCards = set.cards.slice(0, pairCount);
 
     // Create pairs - one card with front text, one with back text
     const gamePairs = [];
@@ -119,9 +121,17 @@ const MatchingGame = () => {
 
   // Reset game
   const handleReset = () => {
-    if (selectedSet) {
-      startGame(selectedSet);
+    if (selectedSet && difficulty) {
+      startGame(selectedSet, difficulty);
     }
+  };
+
+  // Get grid columns based on number of cards
+  const getGridColumns = () => {
+    const totalCards = cards.length;
+    if (totalCards <= 8) return "grid-cols-4"; // 4 columns for 4 pairs
+    if (totalCards <= 12) return "grid-cols-4 md:grid-cols-6"; // 6 columns for 6 pairs
+    return "grid-cols-4 md:grid-cols-6 lg:grid-cols-8"; // 8 columns for 8+ pairs
   };
 
   // Calculate score
@@ -135,6 +145,73 @@ const MatchingGame = () => {
 
   // Set selection screen
   if (!gameStarted) {
+    // Difficulty selection for a chosen set
+    if (selectedSet && !difficulty) {
+      const maxPairs = Math.min(Math.floor(selectedSet.cards.length), 12);
+      const difficulties = [
+        { pairs: 4, label: "Dễ", desc: "4 cặp (8 thẻ)", color: "green" },
+        {
+          pairs: 6,
+          label: "Trung bình",
+          desc: "6 cặp (12 thẻ)",
+          color: "yellow",
+        },
+        { pairs: 8, label: "Khó", desc: "8 cặp (16 thẻ)", color: "orange" },
+        { pairs: 12, label: "Cực khó", desc: "12 cặp (24 thẻ)", color: "red" },
+      ].filter((d) => d.pairs <= maxPairs);
+
+      return (
+        <div className="max-w-2xl mx-auto">
+          <button
+            onClick={() => setSelectedSet(null)}
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-6"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span>Quay lại</span>
+          </button>
+
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <div className="text-center mb-8">
+              <Trophy className="h-12 w-12 text-purple-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                {selectedSet.title}
+              </h2>
+              <p className="text-gray-600">Chọn độ khó</p>
+            </div>
+
+            <div className="space-y-4">
+              {difficulties.map((diff) => (
+                <button
+                  key={diff.pairs}
+                  onClick={() => startGame(selectedSet, diff.pairs)}
+                  className="w-full text-left border-2 border-gray-200 hover:border-purple-500 bg-gradient-to-r from-white to-gray-50 hover:from-purple-50 hover:to-purple-100 rounded-lg p-6 transition-all hover:shadow-md"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {diff.label}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">{diff.desc}</p>
+                    </div>
+                    <div className="text-3xl font-bold text-purple-600">
+                      {diff.pairs}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-gray-700">
+                💡 <strong>Mẹo:</strong> Bắt đầu với độ khó Dễ nếu đây là lần
+                đầu chơi với bộ thẻ này!
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="max-w-4xl mx-auto">
         <button
@@ -206,7 +283,7 @@ const MatchingGame = () => {
                 {validSets.map((set) => (
                   <button
                     key={set.id}
-                    onClick={() => startGame(set)}
+                    onClick={() => setSelectedSet(set)}
                     className="text-left bg-white border-2 border-gray-200 hover:border-purple-500 rounded-lg p-4 transition-all hover:shadow-md"
                   >
                     <div className="flex items-start justify-between mb-2">
@@ -275,6 +352,7 @@ const MatchingGame = () => {
               onClick={() => {
                 setGameStarted(false);
                 setSelectedSet(null);
+                setDifficulty(null);
               }}
               className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-lg transition-colors"
             >
@@ -295,6 +373,7 @@ const MatchingGame = () => {
           onClick={() => {
             setGameStarted(false);
             setSelectedSet(null);
+            setDifficulty(null);
           }}
           className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
         >
@@ -334,7 +413,7 @@ const MatchingGame = () => {
       </div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className={`grid ${getGridColumns()} gap-3 md:gap-4`}>
         {cards.map((card) => {
           const isFlipped = flippedCards.includes(card.id);
           const isMatched = matchedPairs.some((pair) => pair.includes(card.id));
@@ -352,14 +431,14 @@ const MatchingGame = () => {
                   : "bg-white hover:bg-gray-50 shadow hover:shadow-md"
               }`}
             >
-              <div className="h-full flex items-center justify-center p-4">
+              <div className="h-full flex items-center justify-center p-2 md:p-4">
                 {isFlipped || isMatched ? (
-                  <span className="text-sm font-medium text-center line-clamp-4">
+                  <span className="text-xs md:text-sm font-medium text-center line-clamp-3 md:line-clamp-4">
                     {card.content}
                   </span>
                 ) : (
-                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                    <span className="text-2xl">?</span>
+                  <div className="w-8 h-8 md:w-12 md:h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <span className="text-xl md:text-2xl">?</span>
                   </div>
                 )}
               </div>
