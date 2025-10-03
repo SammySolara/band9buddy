@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Plus,
@@ -8,14 +8,17 @@ import {
   Upload,
   Palette,
   Tag,
+  AlertCircle,
 } from "lucide-react";
 import { useFlashcards } from "../../contexts/FlashcardContext";
 import { supabase } from "../../services/supabase";
+import { useDrafts } from "../../contexts/DraftContext";
 
 const SetEditorModal = () => {
   const { setId } = useParams();
   const navigate = useNavigate();
   const { sets, createSet, updateSet } = useFlashcards();
+  const { saveDraft, getDraft, clearDraft } = useDrafts();
 
   const isNewSet = setId === "new";
   const existingSet = isNewSet ? null : sets.find((set) => set.id === setId);
@@ -34,6 +37,10 @@ const SetEditorModal = () => {
   ]);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingImages, setUploadingImages] = useState({});
+  const [showDraftNotice, setShowDraftNotice] = useState(false);
+
+  const hasLoadedInitialData = useRef(false);
+  const autoSaveTimer = useRef(null);
 
   const availableColors = [
     "#3B82F6",
@@ -63,31 +70,90 @@ const SetEditorModal = () => {
     "Informal",
   ];
 
+  // Load initial data (draft or existing set) - only runs once
   useEffect(() => {
+    if (hasLoadedInitialData.current) return;
+
+    const draft = getDraft(setId);
+
     if (existingSet) {
-      setTitle(existingSet.title);
-      setDescription(existingSet.description);
-      setColor(existingSet.color || "#3B82F6");
-      setCards(
-        existingSet.cards?.length
-          ? existingSet.cards.map((card) => ({
-              ...card,
-              front_image_url: card.front_image_url || "",
-              back_image_url: card.back_image_url || "",
-              tags: card.tags || [],
-            }))
-          : [
-              {
-                front: "",
-                back: "",
-                front_image_url: "",
-                back_image_url: "",
-                tags: [],
-              },
-            ]
-      );
+      // Always load from existing set first
+      const baseTitle = existingSet.title;
+      const baseDescription = existingSet.description;
+      const baseColor = existingSet.color || "#3B82F6";
+      const baseCards = existingSet.cards?.length
+        ? existingSet.cards.map((card) => ({
+            ...card,
+            front_image_url: card.front_image_url || "",
+            back_image_url: card.back_image_url || "",
+            tags: card.tags || [],
+          }))
+        : [
+            {
+              front: "",
+              back: "",
+              front_image_url: "",
+              back_image_url: "",
+              tags: [],
+            },
+          ];
+
+      // If draft exists, use draft data (which contains unsaved changes)
+      if (draft) {
+        setTitle(draft.title);
+        setDescription(draft.description);
+        setColor(draft.color);
+        setCards(draft.cards);
+        setShowDraftNotice(true);
+        setTimeout(() => setShowDraftNotice(false), 5000);
+      } else {
+        // No draft, use database data
+        setTitle(baseTitle);
+        setDescription(baseDescription);
+        setColor(baseColor);
+        setCards(baseCards);
+      }
+    } else if (isNewSet) {
+      // For new sets, check if there's a draft
+      if (draft) {
+        setTitle(draft.title);
+        setDescription(draft.description);
+        setColor(draft.color);
+        setCards(draft.cards);
+        setShowDraftNotice(true);
+        setTimeout(() => setShowDraftNotice(false), 5000);
+      }
+      // Otherwise keep the initial empty state
     }
-  }, [existingSet]);
+
+    hasLoadedInitialData.current = true;
+  }, [setId, existingSet, isNewSet, getDraft]);
+
+  // Auto-save draft when data changes
+  useEffect(() => {
+    if (!hasLoadedInitialData.current) return;
+
+    // Clear existing timer
+    if (autoSaveTimer.current) {
+      clearTimeout(autoSaveTimer.current);
+    }
+
+    // Set new timer to save after 1 second of inactivity
+    autoSaveTimer.current = setTimeout(() => {
+      saveDraft(setId, {
+        title,
+        description,
+        color,
+        cards,
+      });
+    }, 1000);
+
+    return () => {
+      if (autoSaveTimer.current) {
+        clearTimeout(autoSaveTimer.current);
+      }
+    };
+  }, [title, description, color, cards, setId, saveDraft]);
 
   const uploadImageToSupabase = async (file, cardId, side) => {
     if (!file) throw new Error("No file provided");
@@ -111,7 +177,6 @@ const SetEditorModal = () => {
 
     return publicUrl;
   };
-  
 
   const deleteImageFromSupabase = async (imageUrl) => {
     try {
@@ -195,14 +260,12 @@ const SetEditorModal = () => {
 
       updateCard(index, `${side}_image_url`, imageUrl);
 
-      // Show success message
       console.log("Image uploaded successfully:", imageUrl);
     } catch (error) {
       console.error("Upload error:", error);
       alert(`Failed to upload image: ${error.message}`);
     } finally {
       setUploadingImages((prev) => ({ ...prev, [uploadKey]: false }));
-      // Reset the file input
       event.target.value = "";
     }
   };
@@ -223,6 +286,11 @@ const SetEditorModal = () => {
       ? card.tags.filter((t) => t !== tag)
       : [...card.tags, tag];
     updateCard(index, "tags", newTags);
+  };
+
+  const handleCancel = () => {
+    clearDraft(setId);
+    navigate("/dashboard/flashcards");
   };
 
   const handleSave = async () => {
@@ -270,6 +338,7 @@ const SetEditorModal = () => {
       }
 
       if (result.success) {
+        clearDraft(setId);
         navigate("/dashboard/flashcards");
       } else {
         throw new Error(result.error || "Failed to save set");
@@ -285,6 +354,27 @@ const SetEditorModal = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
+        {/* Draft Notice */}
+        {showDraftNotice && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center space-x-3">
+            <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-blue-800 font-medium">
+                Đã khôi phục bản nháp
+              </p>
+              <p className="text-xs text-blue-600 mt-0.5">
+                Các thay đổi chưa lưu của bạn đã được khôi phục tự động
+              </p>
+            </div>
+            <button
+              onClick={() => setShowDraftNotice(false)}
+              className="text-blue-600 hover:text-blue-800"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex justify-between items-start">
@@ -306,7 +396,7 @@ const SetEditorModal = () => {
             </div>
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => navigate("/dashboard/flashcards")}
+                onClick={handleCancel}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <X className="h-5 w-5" />
