@@ -41,6 +41,18 @@ export const readingTests = [
     test_number: 1,
     componentPath: "./tests/reading-tests/ReadingTest1",
   },
+  {
+    id: "reading-2",
+    title: "Academic Reading Test 2",
+    description: "Urban Design, De-extinction, and Psychology of Humour",
+    difficulty: "Intermediate",
+    duration: 60,
+    passages: 3,
+    questions: 40,
+    topics: ["Urban Planning", "Science", "Psychology"],
+    test_number: 2,
+    componentPath: "./tests/reading-tests/ReadingTest2",
+  },
 ];
 
 export const listeningTests = [
