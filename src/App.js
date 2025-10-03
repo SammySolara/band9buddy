@@ -14,6 +14,7 @@ import ResetPasswordForm from "./components/auth/ResetPasswordForm";
 import DashboardRoutes from "./components/dashboard/DashboardRoutes";
 import LoadingSpinner from "./components/common/LoadingSpinner";
 import GlobalDefineWrapper from "./components/common/GlobalDefineWrapper";
+import { FlashcardProvider } from "./contexts/FlashcardContext";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -105,29 +106,31 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <GlobalDefineWrapper>
-          <div className="App">
-            <Routes>
-              {/* Auth routes */}
-              <Route path="/login" element={<AuthPages />} />
-              <Route path="/register" element={<AuthPages />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <FlashcardProvider>
+          <GlobalDefineWrapper>
+            <div className="App">
+              <Routes>
+                {/* Auth routes */}
+                <Route path="/login" element={<AuthPages />} />
+                <Route path="/register" element={<AuthPages />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-              {/* Dashboard routes - protected */}
-              <Route
-                path="/dashboard/*"
-                element={
-                  <ProtectedRoute>
-                    <DashboardRoutes />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Dashboard routes - protected */}
+                <Route
+                  path="/dashboard/*"
+                  element={
+                    <ProtectedRoute>
+                      <DashboardRoutes />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Default redirect */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </div>
-        </GlobalDefineWrapper>
+                {/* Default redirect */}
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </div>
+          </GlobalDefineWrapper>
+        </FlashcardProvider>
       </Router>
     </AuthProvider>
   );

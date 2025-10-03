@@ -1,6 +1,6 @@
 // src/components/dashboard/DashboardRoutes.js
 import { Routes, Route } from "react-router-dom";
-import { FlashcardProvider } from "../../contexts/FlashcardContext";
+
 import { DraftProvider } from "../../contexts/DraftContext";
 import Dashboard from "./Dashboard";
 import FlashcardSets from "../flashcards/FlashcardSets";
@@ -36,7 +36,6 @@ const ComingSoon = ({ feature }) => {
 
 const DashboardRoutes = () => {
   return (
-    <FlashcardProvider>
       <DraftProvider>
         <Routes>
           <Route path="/" element={<Dashboard />} />
@@ -229,7 +228,6 @@ const DashboardRoutes = () => {
           />
         </Routes>
       </DraftProvider>
-    </FlashcardProvider>
   );
 };
 

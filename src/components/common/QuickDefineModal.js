@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
-import { X, Volume2, Loader } from "lucide-react";
+import { X, Volume2, Loader, Plus } from "lucide-react";
+import { useFlashcards } from "../../contexts/FlashcardContext";
+import AddToFlashcardModal from "../flashcards/AddToFlashCardModal";
 
 const QuickDefineModal = ({ word, position, onClose }) => {
   const [wordData, setWordData] = useState(null);
   const [vietnameseTranslation, setVietnameseTranslation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAddToFlashcard, setShowAddToFlashcard] = useState(false);
+  const [selectedDefinition, setSelectedDefinition] = useState(null);
 
   useEffect(() => {
     const fetchWord = async () => {
@@ -76,6 +80,41 @@ const QuickDefineModal = ({ word, position, onClose }) => {
   const playPronunciation = (audioUrl) => {
     const audio = new Audio(audioUrl);
     audio.play().catch((err) => console.log("Audio play failed:", err));
+  };
+
+  const handleAddToFlashcard = (definition) => {
+    setSelectedDefinition(definition);
+    setShowAddToFlashcard(true);
+  };
+
+  const getDefaultDefinition = () => {
+    if (!wordData || !wordData.meanings || wordData.meanings.length === 0) {
+      return {
+        cleanDefinition: "No definition available",
+        displayDefinition: "No definition available",
+        tags: [],
+      };
+    }
+
+    const firstMeaning = wordData.meanings[0];
+    const partOfSpeech = firstMeaning.partOfSpeech;
+    const firstDef =
+      firstMeaning.definitions[0]?.definition || "No definition available";
+
+    let displayDefinition = `(${partOfSpeech}) ${firstDef}`;
+    let cleanDefinition = firstDef;
+    const tags = [partOfSpeech];
+
+    if (vietnameseTranslation) {
+      displayDefinition += `\n\nVietnamese: ${vietnameseTranslation}`;
+      cleanDefinition += `\n\nVietnamese: ${vietnameseTranslation}`;
+    }
+
+    return {
+      cleanDefinition,
+      displayDefinition,
+      tags,
+    };
   };
 
   return (
@@ -161,6 +200,15 @@ const QuickDefineModal = ({ word, position, onClose }) => {
                   </div>
                 )}
 
+                {/* Add to Flashcard Button */}
+                <button
+                  onClick={() => handleAddToFlashcard(getDefaultDefinition())}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium text-sm"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add to Flashcards</span>
+                </button>
+
                 {/* Meanings */}
                 <div className="space-y-3">
                   {wordData.meanings.slice(0, 2).map((meaning, idx) => (
@@ -172,12 +220,40 @@ const QuickDefineModal = ({ word, position, onClose }) => {
                       <div className="space-y-2">
                         {meaning.definitions.slice(0, 2).map((def, defIdx) => (
                           <div key={defIdx} className="text-sm">
-                            <p className="text-gray-700">{def.definition}</p>
-                            {def.example && (
-                              <p className="text-gray-500 italic text-xs mt-1">
-                                "{def.example}"
-                              </p>
-                            )}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <p className="text-gray-700">
+                                  {def.definition}
+                                </p>
+                                {def.example && (
+                                  <p className="text-gray-500 italic text-xs mt-1">
+                                    "{def.example}"
+                                  </p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => {
+                                  let cleanDefinition = def.definition;
+                                  let displayDefinition = `(${meaning.partOfSpeech}) ${def.definition}`;
+                                  const tags = [meaning.partOfSpeech];
+
+                                  if (vietnameseTranslation) {
+                                    cleanDefinition += `\n\nVietnamese: ${vietnameseTranslation}`;
+                                    displayDefinition += `\n\nVietnamese: ${vietnameseTranslation}`;
+                                  }
+
+                                  handleAddToFlashcard({
+                                    cleanDefinition,
+                                    displayDefinition,
+                                    tags,
+                                  });
+                                }}
+                                className="flex-shrink-0 p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                title="Add this definition"
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -201,6 +277,23 @@ const QuickDefineModal = ({ word, position, onClose }) => {
           </div>
         </div>
       </div>
+
+      {/* Add to Flashcard Modal */}
+      {showAddToFlashcard && selectedDefinition && (
+        <AddToFlashcardModal
+          word={word}
+          definition={selectedDefinition}
+          onClose={() => {
+            setShowAddToFlashcard(false);
+            setSelectedDefinition(null);
+          }}
+          onSuccess={() => {
+            // Optional: Show success message or keep modal open
+            setShowAddToFlashcard(false);
+            setSelectedDefinition(null);
+          }}
+        />
+      )}
     </>
   );
 };
