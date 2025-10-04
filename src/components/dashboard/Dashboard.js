@@ -461,7 +461,9 @@ const Dashboard = ({ children }) => {
 
               {/* Actions */}
               <div className="pt-3 border-t space-y-2">
-                <button className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-left">
+                <button
+                  onClick={() => navigate("/dashboard/settings")}
+                  className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-left">
                   <Settings className="h-5 w-5 text-gray-600" />
                   <span className="text-gray-700">Settings</span>
                 </button>
