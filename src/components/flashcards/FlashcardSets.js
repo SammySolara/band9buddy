@@ -2,14 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Play, Edit3, Trash2, BookOpen, Share2 } from "lucide-react";
 import { useFlashcards } from "../../contexts/FlashcardContext";
-import ShareModal from "./ShareModal";
 
 const FlashcardSets = () => {
   const navigate = useNavigate();
   const { sets, deleteSet } = useFlashcards();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [setToDelete, setSetToDelete] = useState(null);
-  const [showShareModal, setShowShareModal] = useState(false);
   const [setToShare, setSetToShare] = useState(null);
 
   const handleCreateNew = () => {
@@ -29,10 +27,6 @@ const FlashcardSets = () => {
     setShowDeleteModal(true);
   };
 
-  const handleShareClick = (set) => {
-    setSetToShare(set);
-    setShowShareModal(true);
-  };
 
   const confirmDelete = () => {
     if (setToDelete) {
@@ -177,23 +171,6 @@ const FlashcardSets = () => {
                     </button>
 
                     <button
-                      onClick={() => handleShareClick(set)}
-                      className="flex items-center justify-center p-2.5 text-gray-600 hover:text-gray-800 rounded-lg transition-all duration-200"
-                      style={{
-                        backgroundColor: mediumBg,
-                      }}
-                      onMouseEnter={(e) =>
-                        (e.target.style.backgroundColor = lightBg)
-                      }
-                      onMouseLeave={(e) =>
-                        (e.target.style.backgroundColor = mediumBg)
-                      }
-                      title="Chia sẻ"
-                    >
-                      <Share2 className="h-4 w-4" />
-                    </button>
-
-                    <button
                       onClick={() => handleEditSet(set)}
                       className="flex items-center justify-center p-2.5 text-gray-600 hover:text-gray-800 rounded-lg transition-all duration-200"
                       style={{
@@ -263,17 +240,6 @@ const FlashcardSets = () => {
             </div>
           </div>
         </div>
-      )}
-
-      {showShareModal && setToShare && (
-        <ShareModal
-          setId={setToShare.id}
-          setTitle={setToShare.title}
-          onClose={() => {
-            setShowShareModal(false);
-            setSetToShare(null);
-          }}
-        />
       )}
     </div>
   );
