@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Play, Edit3, Trash2, BookOpen } from "lucide-react";
+import { Plus, Play, Edit3, Trash2, BookOpen, Share2 } from "lucide-react";
 import { useFlashcards } from "../../contexts/FlashcardContext";
+import ShareSetModal from "./ShareSetModal";
 
 const FlashcardSets = () => {
   const navigate = useNavigate();
-  const { sets, deleteSet } = useFlashcards();
+  const { sets, deleteSet, shareSet } = useFlashcards();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [setToDelete, setSetToDelete] = useState(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [setToShare, setSetToShare] = useState(null);
 
   const handleCreateNew = () => {
     navigate("/dashboard/flashcards/edit/new");
@@ -26,12 +29,22 @@ const FlashcardSets = () => {
     setShowDeleteModal(true);
   };
 
+  const handleShareClick = (set) => {
+    setSetToShare(set);
+    setShowShareModal(true);
+  };
+
   const confirmDelete = () => {
     if (setToDelete) {
       deleteSet(setToDelete.id);
       setShowDeleteModal(false);
       setSetToDelete(null);
     }
+  };
+
+  const handleShare = async (setId, email) => {
+    const result = await shareSet(setId, email);
+    return result;
   };
 
   // Helper function to get lighter version of a color for backgrounds
@@ -162,7 +175,7 @@ const FlashcardSets = () => {
                   </div>
 
                   {/* Action buttons */}
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-2 mb-3">
                     <button
                       onClick={() => handleStudySet(set)}
                       disabled={!set.cards?.length}
@@ -183,21 +196,42 @@ const FlashcardSets = () => {
                       className="flex items-center justify-center p-2.5 text-gray-600 hover:text-gray-800 rounded-lg transition-all duration-200"
                       style={{
                         backgroundColor: mediumBg,
-                        "&:hover": { backgroundColor: lightBg },
                       }}
                       onMouseEnter={(e) =>
-                        (e.target.style.backgroundColor = lightBg)
+                        (e.currentTarget.style.backgroundColor = lightBg)
                       }
                       onMouseLeave={(e) =>
-                        (e.target.style.backgroundColor = mediumBg)
+                        (e.currentTarget.style.backgroundColor = mediumBg)
                       }
                     >
                       <Edit3 className="h-4 w-4" />
                     </button>
+                  </div>
+
+                  {/* Secondary actions */}
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleShareClick(set)}
+                      disabled={!set.cards?.length}
+                      className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed border"
+                      style={{
+                        borderColor: set.cards?.length ? setColor : "#D1D5DB",
+                        color: set.cards?.length ? setColor : "#9CA3AF",
+                        backgroundColor: "white",
+                      }}
+                      title={
+                        set.cards?.length
+                          ? "Chia sẻ bộ thẻ"
+                          : "Thêm thẻ để chia sẻ"
+                      }
+                    >
+                      <Share2 className="h-4 w-4" />
+                      <span>Chia sẻ</span>
+                    </button>
 
                     <button
                       onClick={() => handleDeleteClick(set)}
-                      className="flex items-center justify-center p-2.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all duration-200"
+                      className="flex items-center justify-center p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all duration-200 border border-red-200"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -249,6 +283,18 @@ const FlashcardSets = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && setToShare && (
+        <ShareSetModal
+          set={setToShare}
+          onClose={() => {
+            setShowShareModal(false);
+            setSetToShare(null);
+          }}
+          onShare={handleShare}
+        />
       )}
     </div>
   );

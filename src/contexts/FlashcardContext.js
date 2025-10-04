@@ -349,6 +349,62 @@ export const FlashcardProvider = ({ children }) => {
     }
   };
 
+  // Share flashcard set with another user
+  const shareSet = async (setId, recipientEmail) => {
+    if (!user) return { success: false, error: "User not authenticated" };
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        return { success: false, error: "User not authenticated" };
+      }
+
+      const endpoint = process.env.REACT_APP_SUPABASE_SHARING_SET_ENDPOINT;
+
+      if (!endpoint) {
+        console.error(
+          "REACT_APP_SUPABASE_SHARING_SET_ENDPOINT is not configured"
+        );
+        return {
+          success: false,
+          error: "Sharing feature is not configured. Please contact support.",
+        };
+      }
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          setId,
+          recipientEmail: recipientEmail.trim().toLowerCase(),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: result.error || "Failed to share flashcard set",
+        };
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Share set error:", error);
+      return {
+        success: false,
+        error: error.message || "An error occurred while sharing",
+      };
+    }
+  };
+
   // Load sets when user changes
   useEffect(() => {
     if (user) {
@@ -371,6 +427,7 @@ export const FlashcardProvider = ({ children }) => {
     updateCard,
     deleteCard,
     loadSets,
+    shareSet,
   };
 
   return (
