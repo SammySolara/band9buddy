@@ -477,11 +477,11 @@ const DictionarySearch = () => {
         <div className="bg-white rounded-xl shadow-lg p-12 text-center">
           <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Start exploring English words
+            Bắt đầu khám phá các từ tiếng Anh
           </h3>
           <p className="text-gray-600">
-            Type any English word in the search box above to get definitions,
-            pronunciations, and examples.
+            Gõ bất kỳ từ tiếng Anh nào vào ô tìm kiếm phía trên để nhận định
+            nghĩa, cách phát âm, và các ví dụ.
           </p>
         </div>
       )}

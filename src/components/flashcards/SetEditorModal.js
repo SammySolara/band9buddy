@@ -698,7 +698,7 @@ const SetEditorModal = () => {
                               className="text-blue-600 hover:text-blue-800 cursor-pointer flex items-center space-x-1 text-sm"
                             >
                               <Upload className="h-4 w-4" />
-                              <span>Tải ảnh</span>
+                              <span>Tải lên ảnh</span>
                             </label>
                           )}
                         </div>
@@ -764,7 +764,7 @@ const SetEditorModal = () => {
                               className="text-blue-600 hover:text-blue-800 cursor-pointer flex items-center space-x-1 text-sm"
                             >
                               <Upload className="h-4 w-4" />
-                              <span>Tải ảnh</span>
+                              <span>Tải lên ảnh</span>
                             </label>
                           )}
                         </div>

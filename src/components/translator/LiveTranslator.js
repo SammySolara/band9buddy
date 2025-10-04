@@ -114,7 +114,7 @@ const LiveTranslator = () => {
           disabled={loading || !text.trim()}
           className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors"
         >
-          {loading ? "Translating..." : "Translate"}
+          {loading ? "Đang dịch" : "Dịch"}
         </button>
       </div>
 

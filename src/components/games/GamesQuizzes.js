@@ -17,7 +17,7 @@ const GamesQuizzes = () => {
       id: "matching-game",
       icon: Puzzle,
       title: "Matching Game",
-      description: "Ghép các cặp từ và định nghĩa",
+      description: "Ghép các cặp từ",
       color: "bg-purple-500",
       path: "/dashboard/games/matching",
       comingSoon: false,
@@ -90,23 +90,6 @@ const GamesQuizzes = () => {
         </p>
       </div>
 
-      {/* Info Banner */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl shadow-lg p-6 mb-8 text-white">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-white bg-opacity-20 rounded-lg">
-            <Trophy className="h-8 w-8" />
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold mb-2">Cách hoạt động</h3>
-            <p className="text-sm opacity-90 leading-relaxed">
-              Các trò chơi sẽ sử dụng từ vựng từ các bộ flashcards bạn đã tạo.
-              Hãy thêm flashcards trước để có trải nghiệm tốt nhất! Điểm số và
-              tiến độ của bạn sẽ được lưu lại.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Games Grid - 3x2 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {gameTypes.map((game) => {
@@ -175,10 +158,6 @@ const GamesQuizzes = () => {
             <span>
               Tạo flashcards mới để mở khóa nhiều từ vựng cho trò chơi
             </span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-blue-600 mr-2">•</span>
-            <span>Sử dụng Listening Dictation để cải thiện kỹ năng nghe</span>
           </li>
         </ul>
       </div>
