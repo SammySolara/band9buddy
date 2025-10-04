@@ -8,16 +8,17 @@ import {
   AlertCircle,
   CheckCircle,
   Loader,
-  Bell,
-  Globe,
   Trash2,
   Shield,
+  LogOut,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../services/supabase";
+import { useNavigate } from "react-router-dom";
 
 const SettingsPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -36,13 +37,6 @@ const SettingsPage = () => {
     confirmPassword: "",
   });
 
-  // Preferences state
-  const [preferences, setPreferences] = useState({
-    emailNotifications: true,
-    studyReminders: true,
-    weeklyProgress: true,
-  });
-
   const showMessage = (type, text) => {
     setMessage({ type, text });
     setTimeout(() => setMessage({ type: "", text: "" }), 5000);
@@ -58,7 +52,7 @@ const SettingsPage = () => {
       return;
     }
 
-    if (file.size > 2 * 2048 * 2048) {
+    if (file.size > 4 * 1024 * 1024) {
       showMessage("error", "Kích thước ảnh phải nhỏ hơn 4MB");
       return;
     }
@@ -68,6 +62,15 @@ const SettingsPage = () => {
       const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
+
+      // Delete old avatar if exists
+      if (user?.user_metadata?.avatar_url) {
+        const oldPath = user.user_metadata.avatar_url
+          .split("/")
+          .slice(-2)
+          .join("/");
+        await supabase.storage.from("avatars").remove([oldPath]);
+      }
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
@@ -97,28 +100,53 @@ const SettingsPage = () => {
 
   // Handle profile update
   const handleProfileUpdate = async () => {
+    if (!profileData.name.trim()) {
+      showMessage("error", "Tên hiển thị không được để trống!");
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // Update name
       const { error: nameError } = await supabase.auth.updateUser({
-        data: { name: profileData.name },
+        data: { name: profileData.name.trim() },
       });
 
       if (nameError) throw nameError;
 
+      // Check if email changed
       if (profileData.email !== user.email) {
-        const { error: emailError } = await supabase.auth.updateUser({
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(profileData.email)) {
+          showMessage("error", "Email không hợp lệ!");
+          setLoading(false);
+          return;
+        }
+
+        const { data, error: emailError } = await supabase.auth.updateUser({
           email: profileData.email,
         });
 
         if (emailError) throw emailError;
-        showMessage("success", "Đã gửi email xác nhận đến địa chỉ mới!");
+
+        showMessage(
+          "success",
+          "Đã gửi email xác nhận đến địa chỉ mới! Vui lòng kiểm tra hộp thư và xác nhận để hoàn tất thay đổi."
+        );
       } else {
         showMessage("success", "Cập nhật thông tin thành công!");
       }
     } catch (error) {
       console.error("Profile update error:", error);
-      showMessage("error", error.message || "Có lỗi xảy ra khi cập nhật.");
+
+      // Handle specific error cases
+      if (error.message?.includes("email")) {
+        showMessage("error", "Email đã được sử dụng hoặc không hợp lệ.");
+      } else {
+        showMessage("error", error.message || "Có lỗi xảy ra khi cập nhật.");
+      }
     } finally {
       setLoading(false);
     }
@@ -170,9 +198,53 @@ const SettingsPage = () => {
 
     setLoading(true);
     try {
+      const userId = user.id;
+
+      // Delete user's data from database tables
+      // Uncomment and modify based on your database schema:
+      await supabase.from('flashcards').delete().eq('user_id', userId);
+      await supabase.from("flashcards_sets").delete().eq("user_id", userId);
+      await supabase.from('study_sessions').delete().eq('user_id', userId);
+      await supabase.from('test_results').delete().eq('user_id', userId);
+
+      // Delete avatar from storage if exists
+      if (user?.user_metadata?.avatar_url) {
+        const avatarPath = user.user_metadata.avatar_url
+          .split("/")
+          .slice(-2)
+          .join("/");
+        await supabase.storage.from("avatars").remove([avatarPath]);
+      }
+
+      // Try to delete user account using RPC function
+      const { error: deleteError } = await supabase.rpc("delete_user");
+
+      if (deleteError) {
+        console.error("Delete user error:", deleteError);
+
+        // If RPC doesn't exist, inform user to contact support
+        showMessage(
+          "error",
+          "Không thể xóa tài khoản tự động. Vui lòng liên hệ hỗ trợ để được trợ giúp xóa tài khoản."
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Sign out after successful deletion
+      await supabase.auth.signOut();
+
+      showMessage("success", "Tài khoản đã được xóa thành công!");
+
+      // Redirect to home page after a delay
+      setTimeout(() => {
+        navigate("/");
+      }, 2000);
+    } catch (error) {
+      console.error("Account deletion error:", error);
       showMessage(
         "error",
-        "Chức năng này đang được phát triển. Vui lòng liên hệ hỗ trợ."
+        "Có lỗi khi xóa tài khoản. Vui lòng thử lại hoặc liên hệ hỗ trợ."
       );
     } finally {
       setLoading(false);
@@ -253,7 +325,8 @@ const SettingsPage = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border-2 border-gray-100 hover:bg-gray-50 transition-colors"
+                    disabled={loading}
+                    className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border-2 border-gray-100 hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
                     <Camera className="h-4 w-4 text-gray-700" />
                   </button>
@@ -314,7 +387,8 @@ const SettingsPage = () => {
                   />
                 </div>
                 <p className="mt-2 text-sm text-gray-500">
-                  Nếu thay đổi email, bạn sẽ nhận được email xác nhận
+                  Nếu thay đổi email, bạn sẽ nhận được email xác nhận. Email mới
+                  chỉ có hiệu lực sau khi xác nhận.
                 </p>
               </div>
 
@@ -389,7 +463,11 @@ const SettingsPage = () => {
 
               <button
                 onClick={handlePasswordReset}
-                disabled={loading}
+                disabled={
+                  loading ||
+                  !passwordData.newPassword ||
+                  !passwordData.confirmPassword
+                }
                 className="flex items-center justify-center space-x-2 w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white py-3 rounded-lg font-medium transition-colors"
               >
                 {loading ? (
