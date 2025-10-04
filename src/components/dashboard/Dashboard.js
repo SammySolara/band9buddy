@@ -114,24 +114,6 @@ const Dashboard = ({ children }) => {
       path: "/dashboard/flashcards",
     },
     {
-      id: "dictionary",
-      icon: BookOpen,
-      title: "Dictionary",
-      description: "Tra từ điển tiếng Anh",
-      color: "bg-green-500",
-      comingSoon: false,
-      path: "/dashboard/dictionary",
-    },
-    {
-      id: "translator",
-      icon: Languages,
-      title: "Live Translator",
-      description: "Dịch thuật trực tiếp",
-      color: "bg-orange-500",
-      comingSoon: false,
-      path: "/dashboard/translator",
-    },
-    {
       id: "games",
       icon: GamepadIcon,
       title: "Games & Quizzes",
@@ -148,6 +130,24 @@ const Dashboard = ({ children }) => {
       color: "bg-red-500",
       comingSoon: false,
       path: "/dashboard/ielts",
+    },
+    {
+      id: "dictionary",
+      icon: BookOpen,
+      title: "Dictionary",
+      description: "Tra từ điển tiếng Anh",
+      color: "bg-green-500",
+      comingSoon: false,
+      path: "/dashboard/dictionary",
+    },
+    {
+      id: "translator",
+      icon: Languages,
+      title: "Live Translator",
+      description: "Dịch thuật trực tiếp",
+      color: "bg-orange-500",
+      comingSoon: false,
+      path: "/dashboard/translator",
     },
   ];
 
@@ -223,15 +223,14 @@ const Dashboard = ({ children }) => {
               <div className="flex items-center gap-2 mb-2">
                 <Star className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="text-xs sm:text-sm font-medium opacity-90">
-                  Word of the Day
+                  Từ của Ngày
                 </span>
               </div>
               <h3 className="text-xl sm:text-2xl font-bold mb-1">
                 {wordOfTheDay}
               </h3>
               <p className="text-xs sm:text-sm opacity-80">
-                Click to explore this word's meaning, pronunciation, and
-                examples
+                Nhấp để khám phá nghĩa, cách phát âm, và các ví dụ của từ này
               </p>
             </div>
             <div className="text-right">
