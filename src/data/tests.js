@@ -233,5 +233,19 @@ export const listeningTests = [
     test_number: 3,
     componentPath: "./tests/listening-tests/ListeningTest3",
   },
+  {
+    id: "listening-4",
+    title: "IELTS Listening Test 4",
+    description:
+      "Exercise Survey, Library Tour, Lecture Strategies & Neutrinos",
+    difficulty: "Intermediate",
+    duration: 30,
+    sections: 4,
+    questions: 40,
+    audioLength: "25 min",
+    topics: ["Health & Fitness", "Education", "Academic Skills", "Science"],
+    test_number: 4,
+    componentPath: "./tests/listening-tests/ListeningTest4",
+  },
 ];
 
