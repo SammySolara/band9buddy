@@ -247,5 +247,24 @@ export const listeningTests = [
     test_number: 4,
     componentPath: "./tests/listening-tests/ListeningTest4",
   },
+  {
+    id: "listening-5",
+    title: "IELTS Listening Test 5",
+    description:
+      "Project Planning, Property Repairs, Academic Textbooks & Rural Farming",
+    difficulty: "Intermediate",
+    duration: 30,
+    sections: 4,
+    questions: 40,
+    audioLength: "25 min",
+    topics: [
+      "Project Management",
+      "Property Maintenance",
+      "Academic Studies",
+      "Agriculture",
+    ],
+    test_number: 5,
+    componentPath: "./tests/listening-tests/ListeningTest5",
+  },
 ];
 
