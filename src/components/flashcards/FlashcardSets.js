@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Plus, Play, Edit3, Trash2, BookOpen, Share2 } from "lucide-react";
 import { useFlashcards } from "../../contexts/FlashcardContext";
@@ -250,40 +251,42 @@ const FlashcardSets = () => {
       )}
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="p-2 bg-red-100 rounded-full">
-                <Trash2 className="h-5 w-5 text-red-600" />
+      {showDeleteModal &&
+        createPortal(
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="p-2 bg-red-100 rounded-full">
+                  <Trash2 className="h-5 w-5 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Xóa bộ thẻ
+                </h3>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Xóa bộ thẻ
-              </h3>
-            </div>
 
-            <p className="text-gray-600 mb-6">
-              Bạn có chắc muốn xóa bộ thẻ "{setToDelete?.title}"? Hành động này
-              không thể hoàn tác.
-            </p>
+              <p className="text-gray-600 mb-6">
+                Bạn có chắc muốn xóa bộ thẻ "{setToDelete?.title}"? Hành động
+                này không thể hoàn tác.
+              </p>
 
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium"
-              >
-                Xóa
-              </button>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium"
+                >
+                  Xóa
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
 
       {/* Share Modal */}
       {showShareModal && setToShare && (

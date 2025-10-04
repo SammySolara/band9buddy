@@ -1,5 +1,6 @@
 // src/components/flashcards/ShareSetModal.js
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { Share2, X, Mail, Check, AlertCircle, Loader } from "lucide-react";
 
 const ShareSetModal = ({ set, onClose, onShare }) => {
@@ -34,7 +35,7 @@ const ShareSetModal = ({ set, onClose, onShare }) => {
 
   const setColor = set.color || "#3B82F6";
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
         {/* Header */}
@@ -154,6 +155,8 @@ const ShareSetModal = ({ set, onClose, onShare }) => {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default ShareSetModal;
