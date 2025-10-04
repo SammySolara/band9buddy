@@ -94,7 +94,7 @@ const SpeakingTests = () => {
         </h2>
         <p className="text-gray-600">
           Luyện tập kỹ năng nói với các bài test theo chuẩn IELTS. Mỗi bài test
-          gồm 3 phần trong 11-14 phút.
+          gồm 3 phần trong 10-15 phút.
         </p>
       </div>
 
@@ -103,13 +103,13 @@ const SpeakingTests = () => {
           <MessageSquare className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
           <div>
             <h3 className="font-semibold text-orange-900 mb-2">
-              How Speaking Tests Work
+              Cách thức hoạt động của các bài kiểm tra nói
             </h3>
             <p className="text-orange-800 text-sm">
-              Speaking tests use your browser's speech recognition to transcribe
-              your answers. You'll see band 8-9 model answers to emulate, and
-              you can self-assess your fluency, vocabulary, grammar, and
-              pronunciation.
+              Các bài kiểm tra nói sử dụng tính năng nhận dạng giọng nói của
+              trình duyệt để phiên âm câu trả lời của bạn. Bạn sẽ thấy các câu
+              trả lời mẫu đạt band 8-9 để mô phỏng, và bạn có thể tự đánh giá sự
+              lưu loát, từ vựng, ngữ pháp và cách phát âm của mình
             </p>
           </div>
         </div>
