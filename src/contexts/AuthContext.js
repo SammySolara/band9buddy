@@ -58,8 +58,12 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      // Handle password update completion
-      if (event === "USER_UPDATED") {
+      // Handle password update completion (after reset)
+      // Only sign out if we're on the reset password page
+      if (
+        event === "USER_UPDATED" &&
+        window.location.pathname === "/reset-password"
+      ) {
         // After password update, user should be signed out
         setSession(null);
         setUser(null);
@@ -67,7 +71,7 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      // Normal auth state changes
+      // Normal auth state changes (including signup and regular login)
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -87,11 +91,25 @@ export const AuthProvider = ({ children }) => {
       );
 
       if (error) {
+        console.error("Signup error:", error);
         return { success: false, error: error.message };
+      }
+
+      console.log("Signup successful:", data);
+
+      // Check if email confirmation is required
+      if (data?.user && !data.session) {
+        // User created but needs to confirm email
+        return {
+          success: true,
+          data,
+          requiresEmailConfirmation: true,
+        };
       }
 
       return { success: true, data };
     } catch (error) {
+      console.error("Signup exception:", error);
       return { success: false, error: error.message };
     } finally {
       setLoading(false);
@@ -105,11 +123,13 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await authHelpers.signIn(email, password);
 
       if (error) {
+        console.error("Login error:", error);
         return { success: false, error: error.message };
       }
 
       return { success: true, data };
     } catch (error) {
+      console.error("Login exception:", error);
       return { success: false, error: error.message };
     } finally {
       setLoading(false);

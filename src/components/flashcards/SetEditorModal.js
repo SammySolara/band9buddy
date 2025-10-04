@@ -9,6 +9,7 @@ import {
   Palette,
   Tag,
   AlertCircle,
+  Lock,
 } from "lucide-react";
 import { useFlashcards } from "../../contexts/FlashcardContext";
 import { supabase } from "../../services/supabase";
@@ -38,6 +39,10 @@ const SetEditorModal = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingImages, setUploadingImages] = useState({});
   const [showDraftNotice, setShowDraftNotice] = useState(false);
+
+  const [isOwner, setIsOwner] = useState(true);
+  const [userPermission, setUserPermission] = useState("edit");
+  const [isLoadingPermissions, setIsLoadingPermissions] = useState(true);
 
   const hasLoadedInitialData = useRef(false);
   const autoSaveTimer = useRef(null);
@@ -70,14 +75,79 @@ const SetEditorModal = () => {
     "Informal",
   ];
 
-  // Load initial data (draft or existing set) - only runs once
   useEffect(() => {
-    if (hasLoadedInitialData.current) return;
+    const checkPermissions = async () => {
+      if (isNewSet) {
+        setIsOwner(true);
+        setUserPermission("edit");
+        setIsLoadingPermissions(false);
+        return;
+      }
+
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          navigate("/dashboard/flashcards");
+          return;
+        }
+
+        // Check ownership from context first
+        const userIsOwner = existingSet?.isOwner !== false;
+        setIsOwner(userIsOwner);
+
+        if (userIsOwner) {
+          setUserPermission("edit");
+        } else {
+          // It's a shared set, get permission from context or check database
+          const contextPermission = existingSet?.permission;
+
+          if (contextPermission) {
+            setUserPermission(contextPermission);
+            if (contextPermission === "view") {
+              alert("Bạn chỉ có quyền xem bộ thẻ này. Không thể chỉnh sửa.");
+            }
+          } else {
+            // Fallback to database check
+            const { data: shareData, error } = await supabase
+              .from("flashcard_set_shares")
+              .select("permission")
+              .eq("set_id", setId)
+              .or(
+                `shared_with_user_id.eq.${user.id},shared_with_email.eq.${user.email}`
+              )
+              .maybeSingle();
+
+            if (error || !shareData) {
+              alert("Bạn không có quyền truy cập bộ thẻ này");
+              navigate("/dashboard/flashcards");
+              return;
+            }
+
+            setUserPermission(shareData.permission);
+            if (shareData.permission === "view") {
+              alert("Bạn chỉ có quyền xem bộ thẻ này. Không thể chỉnh sửa.");
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error checking permissions:", error);
+        navigate("/dashboard/flashcards");
+      } finally {
+        setIsLoadingPermissions(false);
+      }
+    };
+
+    checkPermissions();
+  }, [setId, existingSet, isNewSet, navigate]);
+
+  useEffect(() => {
+    if (hasLoadedInitialData.current || isLoadingPermissions) return;
 
     const draft = getDraft(setId);
 
     if (existingSet) {
-      // Always load from existing set first
       const baseTitle = existingSet.title;
       const baseDescription = existingSet.description;
       const baseColor = existingSet.color || "#3B82F6";
@@ -98,8 +168,7 @@ const SetEditorModal = () => {
             },
           ];
 
-      // If draft exists, use draft data (which contains unsaved changes)
-      if (draft) {
+      if (draft && userPermission === "edit") {
         setTitle(draft.title);
         setDescription(draft.description);
         setColor(draft.color);
@@ -107,14 +176,12 @@ const SetEditorModal = () => {
         setShowDraftNotice(true);
         setTimeout(() => setShowDraftNotice(false), 5000);
       } else {
-        // No draft, use database data
         setTitle(baseTitle);
         setDescription(baseDescription);
         setColor(baseColor);
         setCards(baseCards);
       }
     } else if (isNewSet) {
-      // For new sets, check if there's a draft
       if (draft) {
         setTitle(draft.title);
         setDescription(draft.description);
@@ -123,22 +190,25 @@ const SetEditorModal = () => {
         setShowDraftNotice(true);
         setTimeout(() => setShowDraftNotice(false), 5000);
       }
-      // Otherwise keep the initial empty state
     }
 
     hasLoadedInitialData.current = true;
-  }, [setId, existingSet, isNewSet, getDraft]);
+  }, [
+    setId,
+    existingSet,
+    isNewSet,
+    getDraft,
+    isLoadingPermissions,
+    userPermission,
+  ]);
 
-  // Auto-save draft when data changes
   useEffect(() => {
-    if (!hasLoadedInitialData.current) return;
+    if (!hasLoadedInitialData.current || userPermission !== "edit") return;
 
-    // Clear existing timer
     if (autoSaveTimer.current) {
       clearTimeout(autoSaveTimer.current);
     }
 
-    // Set new timer to save after 1 second of inactivity
     autoSaveTimer.current = setTimeout(() => {
       saveDraft(setId, {
         title,
@@ -153,7 +223,7 @@ const SetEditorModal = () => {
         clearTimeout(autoSaveTimer.current);
       }
     };
-  }, [title, description, color, cards, setId, saveDraft]);
+  }, [title, description, color, cards, setId, saveDraft, userPermission]);
 
   const uploadImageToSupabase = async (file, cardId, side) => {
     if (!file) throw new Error("No file provided");
@@ -181,14 +251,11 @@ const SetEditorModal = () => {
   const deleteImageFromSupabase = async (imageUrl) => {
     try {
       if (!imageUrl || !imageUrl.includes("supabase")) {
-        console.log("Not a Supabase URL, skipping deletion");
         return;
       }
 
       const urlParts = imageUrl.split("/");
       const fileName = urlParts[urlParts.length - 1];
-
-      console.log("Deleting image:", fileName);
 
       const { error } = await supabase.storage
         .from("flashcard-images")
@@ -196,8 +263,6 @@ const SetEditorModal = () => {
 
       if (error) {
         console.error("Error deleting image:", error);
-      } else {
-        console.log("Image deleted successfully");
       }
     } catch (error) {
       console.error("Error deleting image:", error);
@@ -205,6 +270,8 @@ const SetEditorModal = () => {
   };
 
   const addCard = () => {
+    if (userPermission !== "edit") return;
+
     setCards([
       ...cards,
       {
@@ -218,16 +285,19 @@ const SetEditorModal = () => {
   };
 
   const updateCard = (index, field, value) => {
+    if (userPermission !== "edit") return;
+
     const newCards = [...cards];
     newCards[index][field] = value;
     setCards(newCards);
   };
 
   const deleteCard = async (index) => {
+    if (userPermission !== "edit") return;
+
     if (cards.length > 1) {
       const card = cards[index];
 
-      // Delete associated images
       if (card.front_image_url) {
         await deleteImageFromSupabase(card.front_image_url);
       }
@@ -241,6 +311,8 @@ const SetEditorModal = () => {
   };
 
   const handleImageUpload = async (index, side, event) => {
+    if (userPermission !== "edit") return;
+
     const file = event.target.files[0];
     if (!file) return;
 
@@ -249,7 +321,6 @@ const SetEditorModal = () => {
     try {
       setUploadingImages((prev) => ({ ...prev, [uploadKey]: true }));
 
-      // Delete previous image if exists
       const currentImageUrl = cards[index][`${side}_image_url`];
       if (currentImageUrl) {
         await deleteImageFromSupabase(currentImageUrl);
@@ -259,8 +330,6 @@ const SetEditorModal = () => {
       const imageUrl = await uploadImageToSupabase(file, cardId, side);
 
       updateCard(index, `${side}_image_url`, imageUrl);
-
-      console.log("Image uploaded successfully:", imageUrl);
     } catch (error) {
       console.error("Upload error:", error);
       alert(`Failed to upload image: ${error.message}`);
@@ -271,6 +340,8 @@ const SetEditorModal = () => {
   };
 
   const removeImage = async (index, side) => {
+    if (userPermission !== "edit") return;
+
     const imageUrl = cards[index][`${side}_image_url`];
 
     if (imageUrl) {
@@ -281,6 +352,8 @@ const SetEditorModal = () => {
   };
 
   const toggleTag = (index, tag) => {
+    if (userPermission !== "edit") return;
+
     const card = cards[index];
     const newTags = card.tags.includes(tag)
       ? card.tags.filter((t) => t !== tag)
@@ -289,11 +362,18 @@ const SetEditorModal = () => {
   };
 
   const handleCancel = () => {
-    clearDraft(setId);
+    if (userPermission === "edit") {
+      clearDraft(setId);
+    }
     navigate("/dashboard/flashcards");
   };
 
   const handleSave = async () => {
+    if (userPermission !== "edit") {
+      alert("Bạn không có quyền chỉnh sửa bộ thẻ này");
+      return;
+    }
+
     if (!title.trim()) {
       alert("Vui lòng nhập tên bộ thẻ");
       return;
@@ -311,7 +391,7 @@ const SetEditorModal = () => {
       (isUploading) => isUploading
     );
     if (stillUploading) {
-      alert("Please wait for images to finish uploading");
+      alert("Vui lòng đợi ảnh tải xong");
       return;
     }
 
@@ -351,11 +431,37 @@ const SetEditorModal = () => {
     }
   };
 
+  if (isLoadingPermissions) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang kiểm tra quyền truy cập...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const canEdit = userPermission === "edit";
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
-        {/* Draft Notice */}
-        {showDraftNotice && (
+        {!isOwner && userPermission === "view" && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 flex items-center space-x-3">
+            <Lock className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-yellow-800 font-medium">
+                Chế độ chỉ xem
+              </p>
+              <p className="text-xs text-yellow-600 mt-0.5">
+                Bạn chỉ có quyền xem bộ thẻ này. Không thể chỉnh sửa.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {showDraftNotice && canEdit && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center space-x-3">
             <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0" />
             <div className="flex-1">
@@ -375,7 +481,6 @@ const SetEditorModal = () => {
           </div>
         )}
 
-        {/* Header */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex justify-between items-start">
             <div className="flex-1">
@@ -385,13 +490,24 @@ const SetEditorModal = () => {
                   style={{ backgroundColor: color }}
                 />
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {isNewSet ? "Tạo bộ thẻ mới" : "Chỉnh sửa bộ thẻ"}
+                  {isNewSet
+                    ? "Tạo bộ thẻ mới"
+                    : canEdit
+                    ? "Chỉnh sửa bộ thẻ"
+                    : "Xem bộ thẻ"}
                 </h1>
+                {!isOwner && (
+                  <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    Được chia sẻ
+                  </span>
+                )}
               </div>
               <p className="text-gray-600">
                 {isNewSet
                   ? "Tạo bộ flashcard mới để học từ vựng"
-                  : "Chỉnh sửa nội dung bộ thẻ"}
+                  : canEdit
+                  ? "Chỉnh sửa nội dung bộ thẻ"
+                  : "Xem nội dung bộ thẻ được chia sẻ"}
               </p>
             </div>
             <div className="flex items-center space-x-3">
@@ -400,21 +516,22 @@ const SetEditorModal = () => {
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <X className="h-5 w-5" />
-                <span>Hủy</span>
+                <span>{canEdit ? "Hủy" : "Đóng"}</span>
               </button>
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-2 rounded-lg transition-colors shadow-sm"
-              >
-                <Save className="h-5 w-5" />
-                <span>{isSaving ? "Đang lưu..." : "Lưu bộ thẻ"}</span>
-              </button>
+              {canEdit && (
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-2 rounded-lg transition-colors shadow-sm"
+                >
+                  <Save className="h-5 w-5" />
+                  <span>{isSaving ? "Đang lưu..." : "Lưu bộ thẻ"}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Set Configuration */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
             <Palette className="h-5 w-5 mr-2 text-gray-600" />
@@ -430,9 +547,10 @@ const SetEditorModal = () => {
                 <input
                   type="text"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => canEdit && setTitle(e.target.value)}
                   placeholder="Nhập tên bộ thẻ..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  disabled={!canEdit}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -444,12 +562,13 @@ const SetEditorModal = () => {
                   {availableColors.map((colorOption) => (
                     <button
                       key={colorOption}
-                      onClick={() => setColor(colorOption)}
+                      onClick={() => canEdit && setColor(colorOption)}
+                      disabled={!canEdit}
                       className={`w-8 h-8 rounded-full border-2 transition-all ${
                         color === colorOption
                           ? "border-gray-800 scale-110"
                           : "border-gray-300 hover:scale-105"
-                      }`}
+                      } ${!canEdit ? "opacity-50 cursor-not-allowed" : ""}`}
                       style={{ backgroundColor: colorOption }}
                     />
                   ))}
@@ -463,16 +582,16 @@ const SetEditorModal = () => {
               </label>
               <textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => canEdit && setDescription(e.target.value)}
                 placeholder="Mô tả về bộ thẻ này..."
                 rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                disabled={!canEdit}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
             </div>
           </div>
         </div>
 
-        {/* Cards Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center">
@@ -481,13 +600,15 @@ const SetEditorModal = () => {
               </span>
               Thẻ học
             </h2>
-            <button
-              onClick={addCard}
-              className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Thêm thẻ mới</span>
-            </button>
+            {canEdit && (
+              <button
+                onClick={addCard}
+                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Thêm thẻ mới</span>
+              </button>
+            )}
           </div>
 
           <div className="space-y-6">
@@ -517,7 +638,7 @@ const SetEditorModal = () => {
                       </div>
                     )}
                   </div>
-                  {cards.length > 1 && (
+                  {canEdit && cards.length > 1 && (
                     <button
                       onClick={() => deleteCard(index)}
                       className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
@@ -527,57 +648,61 @@ const SetEditorModal = () => {
                   )}
                 </div>
 
-                {/* Tags Selection */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Thẻ phân loại
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {availableTags.map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => toggleTag(index, tag)}
-                        className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                          card.tags.includes(tag)
-                            ? "bg-blue-100 text-blue-800 border-blue-300"
-                            : "bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100"
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
+                {canEdit && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Thẻ phân loại
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {availableTags.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => toggleTag(index, tag)}
+                          className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                            card.tags.includes(tag)
+                              ? "bg-blue-100 text-blue-800 border-blue-300"
+                              : "bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100"
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Front Side */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="block text-sm font-medium text-gray-700">
                         Mặt trước
                       </label>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="file"
-                          id={`front-image-${index}`}
-                          accept="image/*"
-                          onChange={(e) => handleImageUpload(index, "front", e)}
-                          className="hidden"
-                        />
-                        {uploadingImages[`${index}-front`] ? (
-                          <div className="text-blue-600 text-sm">
-                            Uploading...
-                          </div>
-                        ) : (
-                          <label
-                            htmlFor={`front-image-${index}`}
-                            className="text-blue-600 hover:text-blue-800 cursor-pointer flex items-center space-x-1 text-sm"
-                          >
-                            <Upload className="h-4 w-4" />
-                            <span>Tải ảnh</span>
-                          </label>
-                        )}
-                      </div>
+                      {canEdit && (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="file"
+                            id={`front-image-${index}`}
+                            accept="image/*"
+                            onChange={(e) =>
+                              handleImageUpload(index, "front", e)
+                            }
+                            className="hidden"
+                          />
+                          {uploadingImages[`${index}-front`] ? (
+                            <div className="text-blue-600 text-sm">
+                              Uploading...
+                            </div>
+                          ) : (
+                            <label
+                              htmlFor={`front-image-${index}`}
+                              className="text-blue-600 hover:text-blue-800 cursor-pointer flex items-center space-x-1 text-sm"
+                            >
+                              <Upload className="h-4 w-4" />
+                              <span>Tải ảnh</span>
+                            </label>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {card.front_image_url && (
@@ -587,19 +712,17 @@ const SetEditorModal = () => {
                           alt="Front"
                           className="w-full h-32 object-cover rounded-lg border border-gray-200"
                           onError={(e) => {
-                            console.error(
-                              "Image failed to load:",
-                              e.target.src
-                            );
                             e.target.style.display = "none";
                           }}
                         />
-                        <button
-                          onClick={() => removeImage(index, "front")}
-                          className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
+                        {canEdit && (
+                          <button
+                            onClick={() => removeImage(index, "front")}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
                       </div>
                     )}
 
@@ -610,38 +733,42 @@ const SetEditorModal = () => {
                       }
                       placeholder="Từ vựng, câu hỏi..."
                       rows={4}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      disabled={!canEdit}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
                   </div>
 
-                  {/* Back Side */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="block text-sm font-medium text-gray-700">
                         Mặt sau
                       </label>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="file"
-                          id={`back-image-${index}`}
-                          accept="image/*"
-                          onChange={(e) => handleImageUpload(index, "back", e)}
-                          className="hidden"
-                        />
-                        {uploadingImages[`${index}-back`] ? (
-                          <div className="text-blue-600 text-sm">
-                            Uploading...
-                          </div>
-                        ) : (
-                          <label
-                            htmlFor={`back-image-${index}`}
-                            className="text-blue-600 hover:text-blue-800 cursor-pointer flex items-center space-x-1 text-sm"
-                          >
-                            <Upload className="h-4 w-4" />
-                            <span>Tải ảnh</span>
-                          </label>
-                        )}
-                      </div>
+                      {canEdit && (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="file"
+                            id={`back-image-${index}`}
+                            accept="image/*"
+                            onChange={(e) =>
+                              handleImageUpload(index, "back", e)
+                            }
+                            className="hidden"
+                          />
+                          {uploadingImages[`${index}-back`] ? (
+                            <div className="text-blue-600 text-sm">
+                              Uploading...
+                            </div>
+                          ) : (
+                            <label
+                              htmlFor={`back-image-${index}`}
+                              className="text-blue-600 hover:text-blue-800 cursor-pointer flex items-center space-x-1 text-sm"
+                            >
+                              <Upload className="h-4 w-4" />
+                              <span>Tải ảnh</span>
+                            </label>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {card.back_image_url && (
@@ -651,19 +778,17 @@ const SetEditorModal = () => {
                           alt="Back"
                           className="w-full h-32 object-cover rounded-lg border border-gray-200"
                           onError={(e) => {
-                            console.error(
-                              "Image failed to load:",
-                              e.target.src
-                            );
                             e.target.style.display = "none";
                           }}
                         />
-                        <button
-                          onClick={() => removeImage(index, "back")}
-                          className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
+                        {canEdit && (
+                          <button
+                            onClick={() => removeImage(index, "back")}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
                       </div>
                     )}
 
@@ -674,7 +799,8 @@ const SetEditorModal = () => {
                       }
                       placeholder="Nghĩa, câu trả lời..."
                       rows={4}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      disabled={!canEdit}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -683,7 +809,6 @@ const SetEditorModal = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mt-6">
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-600">
@@ -694,21 +819,23 @@ const SetEditorModal = () => {
               }{" "}
               thẻ hoàn thành
             </div>
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={addCard}
-                className="text-green-600 hover:text-green-800 text-sm font-medium"
-              >
-                + Thêm thẻ nhanh
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
-              </button>
-            </div>
+            {canEdit && (
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={addCard}
+                  className="text-green-600 hover:text-green-800 text-sm font-medium"
+                >
+                  + Thêm thẻ nhanh
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

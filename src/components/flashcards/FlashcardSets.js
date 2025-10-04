@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Play, Edit3, Trash2, BookOpen } from "lucide-react";
+import { Plus, Play, Edit3, Trash2, BookOpen, Share2 } from "lucide-react";
 import { useFlashcards } from "../../contexts/FlashcardContext";
+import ShareModal from "./ShareModal";
 
 const FlashcardSets = () => {
   const navigate = useNavigate();
   const { sets, deleteSet } = useFlashcards();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [setToDelete, setSetToDelete] = useState(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [setToShare, setSetToShare] = useState(null);
 
   const handleCreateNew = () => {
     navigate("/dashboard/flashcards/edit/new");
@@ -26,6 +29,11 @@ const FlashcardSets = () => {
     setShowDeleteModal(true);
   };
 
+  const handleShareClick = (set) => {
+    setSetToShare(set);
+    setShowShareModal(true);
+  };
+
   const confirmDelete = () => {
     if (setToDelete) {
       deleteSet(setToDelete.id);
@@ -34,7 +42,6 @@ const FlashcardSets = () => {
     }
   };
 
-  // Helper function to get lighter version of a color for backgrounds
   const lightenColor = (color, amount = 0.9) => {
     const hex = color.replace("#", "");
     const r = parseInt(hex.substr(0, 2), 16);
@@ -48,21 +55,18 @@ const FlashcardSets = () => {
     return `rgb(${newR}, ${newG}, ${newB})`;
   };
 
-  // Helper function to determine if color is light or dark for text contrast
   const isLightColor = (color) => {
     const hex = color.replace("#", "");
     const r = parseInt(hex.substr(0, 2), 16);
     const g = parseInt(hex.substr(2, 2), 16);
     const b = parseInt(hex.substr(4, 2), 16);
 
-    // Calculate relative luminance
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance > 0.5;
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Bộ thẻ của bạn</h2>
@@ -79,7 +83,6 @@ const FlashcardSets = () => {
         </button>
       </div>
 
-      {/* Sets Grid */}
       {sets.length === 0 ? (
         <div className="text-center py-12">
           <BookOpen className="h-16 w-16 mx-auto text-gray-300 mb-4" />
@@ -111,12 +114,9 @@ const FlashcardSets = () => {
                 className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border-2 overflow-hidden"
                 style={{ borderColor: setColor }}
               >
-                {/* Color header bar */}
                 <div className="h-2" style={{ backgroundColor: setColor }} />
 
-                {/* Card content */}
                 <div className="p-6">
-                  {/* Title section with color accent */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
@@ -140,7 +140,6 @@ const FlashcardSets = () => {
                     </div>
                   </div>
 
-                  {/* Stats section with color accent */}
                   <div
                     className="rounded-lg p-3 mb-4"
                     style={{ backgroundColor: lightBg }}
@@ -161,7 +160,6 @@ const FlashcardSets = () => {
                     </div>
                   </div>
 
-                  {/* Action buttons */}
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleStudySet(set)}
@@ -179,11 +177,10 @@ const FlashcardSets = () => {
                     </button>
 
                     <button
-                      onClick={() => handleEditSet(set)}
+                      onClick={() => handleShareClick(set)}
                       className="flex items-center justify-center p-2.5 text-gray-600 hover:text-gray-800 rounded-lg transition-all duration-200"
                       style={{
                         backgroundColor: mediumBg,
-                        "&:hover": { backgroundColor: lightBg },
                       }}
                       onMouseEnter={(e) =>
                         (e.target.style.backgroundColor = lightBg)
@@ -191,6 +188,24 @@ const FlashcardSets = () => {
                       onMouseLeave={(e) =>
                         (e.target.style.backgroundColor = mediumBg)
                       }
+                      title="Chia sẻ"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </button>
+
+                    <button
+                      onClick={() => handleEditSet(set)}
+                      className="flex items-center justify-center p-2.5 text-gray-600 hover:text-gray-800 rounded-lg transition-all duration-200"
+                      style={{
+                        backgroundColor: mediumBg,
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.target.style.backgroundColor = lightBg)
+                      }
+                      onMouseLeave={(e) =>
+                        (e.target.style.backgroundColor = mediumBg)
+                      }
+                      title="Chỉnh sửa"
                     >
                       <Edit3 className="h-4 w-4" />
                     </button>
@@ -198,13 +213,13 @@ const FlashcardSets = () => {
                     <button
                       onClick={() => handleDeleteClick(set)}
                       className="flex items-center justify-center p-2.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all duration-200"
+                      title="Xóa"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
 
-                {/* Bottom accent line */}
                 <div
                   className="h-1 opacity-30"
                   style={{ backgroundColor: setColor }}
@@ -215,7 +230,6 @@ const FlashcardSets = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
@@ -249,6 +263,17 @@ const FlashcardSets = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {showShareModal && setToShare && (
+        <ShareModal
+          setId={setToShare.id}
+          setTitle={setToShare.title}
+          onClose={() => {
+            setShowShareModal(false);
+            setSetToShare(null);
+          }}
+        />
       )}
     </div>
   );
