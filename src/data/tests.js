@@ -214,5 +214,24 @@ export const listeningTests = [
     test_number: 2,
     componentPath: "./tests/listening-tests/ListeningTest2",
   },
+  {
+    id: "listening-3",
+    title: "IELTS Listening Test 3",
+    description:
+      "Job Application, Fitness Centre, Staff Selection & Cave Formation",
+    difficulty: "Intermediate",
+    duration: 30,
+    sections: 4,
+    questions: 40,
+    audioLength: "25 min",
+    topics: [
+      "Employment",
+      "Health & Fitness",
+      "Academic Discussion",
+      "Science",
+    ],
+    test_number: 3,
+    componentPath: "./tests/listening-tests/ListeningTest3",
+  },
 ];
 
