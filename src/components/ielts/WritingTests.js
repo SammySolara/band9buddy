@@ -163,29 +163,33 @@ const WritingTests = () => {
           >
             <div className="flex flex-col lg:flex-row lg:items-center justify-between">
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <h3 className="text-xl font-semibold text-gray-900">
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
                     {test.title}
                   </h3>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(
-                      test.type
-                    )}`}
-                  >
-                    {test.type}
-                  </span>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(
-                      test.difficulty
-                    )}`}
-                  >
-                    {test.difficulty}
-                  </span>
-                  {test.bestWordCount && (
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      Best: {test.bestWordCount} words
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(
+                        test.type
+                      )}`}
+                    >
+                      {test.type}
                     </span>
-                  )}
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(
+                        test.difficulty
+                      )}`}
+                    >
+                      {test.difficulty}
+                    </span>
+                    {test.bestWordCount && (
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Best: {test.bestWordCount} words
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-gray-600 mb-4">{test.description}</p>
                 </div>
 
                 <p className="text-gray-600 mb-4">{test.description}</p>
