@@ -151,77 +151,7 @@ const GamesQuizzes = () => {
           );
         })}
       </div>
-
-      {/* Stats Section */}
-      <div className="mt-12">
-        <h3 className="text-xl font-semibold text-gray-900 mb-6">
-          Thống kê trò chơi
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex flex-col items-center text-center">
-              <div className="p-2 bg-purple-100 rounded-lg mb-2">
-                <Puzzle className="h-5 w-5 text-purple-600" />
-              </div>
-              <p className="text-xs font-medium text-gray-600 mb-1">Matching</p>
-              <p className="text-xl font-semibold text-gray-900">0</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex flex-col items-center text-center">
-              <div className="p-2 bg-blue-100 rounded-lg mb-2">
-                <HelpCircle className="h-5 w-5 text-blue-600" />
-              </div>
-              <p className="text-xs font-medium text-gray-600 mb-1">Quiz</p>
-              <p className="text-xl font-semibold text-gray-900">0</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex flex-col items-center text-center">
-              <div className="p-2 bg-yellow-100 rounded-lg mb-2">
-                <Trophy className="h-5 w-5 text-yellow-600" />
-              </div>
-              <p className="text-xs font-medium text-gray-600 mb-1">Spelling</p>
-              <p className="text-xl font-semibold text-gray-900">0</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex flex-col items-center text-center">
-              <div className="p-2 bg-green-100 rounded-lg mb-2">
-                <Headphones className="h-5 w-5 text-green-600" />
-              </div>
-              <p className="text-xs font-medium text-gray-600 mb-1">
-                Listening
-              </p>
-              <p className="text-xl font-semibold text-gray-900">0</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex flex-col items-center text-center">
-              <div className="p-2 bg-orange-100 rounded-lg mb-2">
-                <Blocks className="h-5 w-5 text-orange-600" />
-              </div>
-              <p className="text-xs font-medium text-gray-600 mb-1">Builder</p>
-              <p className="text-xl font-semibold text-gray-900">0</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex flex-col items-center text-center">
-              <div className="p-2 bg-pink-100 rounded-lg mb-2">
-                <Grid3x3 className="h-5 w-5 text-pink-600" />
-              </div>
-              <p className="text-xs font-medium text-gray-600 mb-1">Search</p>
-              <p className="text-xl font-semibold text-gray-900">0</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      
       {/* Quick Tips Section */}
       <div className="mt-12 bg-blue-50 border border-blue-200 rounded-lg p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">
