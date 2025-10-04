@@ -17,7 +17,7 @@ export const authHelpers = {
       email,
       password,
       options: {
-        data: userData, // Additional user metadata
+        data: userData, // Additional user metadata (includes firstLogin flag)
       },
     });
     return { data, error };
@@ -67,6 +67,14 @@ export const authHelpers = {
   updatePassword: async (newPassword) => {
     const { data, error } = await supabase.auth.updateUser({
       password: newPassword,
+    });
+    return { data, error };
+  },
+
+  // Update user metadata (for firstLogin flag, etc.)
+  updateUserMetadata: async (metadata) => {
+    const { data, error } = await supabase.auth.updateUser({
+      data: metadata,
     });
     return { data, error };
   },

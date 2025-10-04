@@ -84,11 +84,12 @@ export const AuthProvider = ({ children }) => {
   const signUp = async (email, password, additionalData = {}) => {
     try {
       setLoading(true);
-      const { data, error } = await authHelpers.signUp(
-        email,
-        password,
-        additionalData
-      );
+
+      // Add firstLogin flag to user metadata
+      const { data, error } = await authHelpers.signUp(email, password, {
+        ...additionalData,
+        firstLogin: true, // Initialize as true for new users
+      });
 
       if (error) {
         console.error("Signup error:", error);
@@ -154,6 +155,34 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Mark first login as complete (called when user closes welcome modal)
+  const completeFirstLogin = async () => {
+    try {
+      const { error } = await authHelpers.updateUserMetadata({
+        firstLogin: false,
+      });
+
+      if (error) {
+        console.error("Error updating first login status:", error);
+        return { success: false, error: error.message };
+      }
+
+      // Update local user state immediately
+      setUser((prev) => ({
+        ...prev,
+        user_metadata: {
+          ...prev.user_metadata,
+          firstLogin: false,
+        },
+      }));
+
+      return { success: true };
+    } catch (error) {
+      console.error("Exception updating first login:", error);
+      return { success: false, error: error.message };
+    }
+  };
+
   const value = {
     user,
     session,
@@ -161,7 +190,9 @@ export const AuthProvider = ({ children }) => {
     signUp,
     signIn,
     signOut,
+    completeFirstLogin,
     isAuthenticated: !!user,
+    isFirstLogin: user?.user_metadata?.firstLogin === true, // Check if it's their first login
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

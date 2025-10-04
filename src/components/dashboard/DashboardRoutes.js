@@ -21,6 +21,7 @@ import ListeningDictation from "../games/ListeningDictation";
 import WordBuilder from "../games/WordBuilder";
 import WordSearch from "../games/WordSearch";
 import SettingsPage from "./SettingsPage";
+import FirstLoginModal from "../common/FirstLoginModal";
 
 const ComingSoon = ({ feature }) => {
   return (
@@ -38,6 +39,9 @@ const ComingSoon = ({ feature }) => {
 const DashboardRoutes = () => {
   return (
     <DraftProvider>
+      {/* FirstLoginModal will show across all dashboard pages */}
+      <FirstLoginModal />
+
       <Routes>
         <Route path="/" element={<Dashboard />} />
 
